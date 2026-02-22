@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useBookingStore } from "@/stores/bookingStore";
 import { useWaitlistStore } from "@/stores/waitlistStore";
-import { restaurants } from "@/data/seed";
+import { useRestaurantStore } from "@/stores/restaurantStore";
 import { Booking } from "@/types";
 import { RescheduleModal } from "@/components/RescheduleModal";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,12 @@ const statusVariant: Record<string, "success" | "danger" | "gold" | "warning"> =
   confirmed: "success", cancelled: "danger", completed: "gold", rescheduled: "warning",
 };
 
-function getRestaurantName(id: string): string {
-  return restaurants.find((r) => r.id === id)?.name ?? "Unknown";
-}
-
 export default function BookingsPage() {
   const { bookings, loading, loadBookings, cancel } = useBookingStore();
+  const restaurants = useRestaurantStore((s) => s.restaurants);
+
+  const getRestaurantName = (id: string) =>
+    restaurants.find((r) => r.id === id)?.name ?? "Unknown";
   const { entries: waitlistEntries, loadWaitlist, remove: removeWaitlist } = useWaitlistStore();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [rescheduleBooking, setRescheduleBooking] = useState<Booking | null>(null);

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { restaurants } from "@/data/seed";
+import { useRestaurantStore } from "@/stores/restaurantStore";
 import { cn } from "@/lib/utils";
 
 interface ChatMessage {
@@ -14,13 +14,6 @@ interface ChatMessage {
 
 interface RecCard {
   id: string;
-  name: string;
-  area: string;
-  cuisine: string;
-  price: string;
-  rating: number;
-  imageUrl: string;
-  deals: number;
   reason: string;
   highlight?: string;
 }
@@ -57,24 +50,7 @@ function parseRecs(raw: string): { text: string; recs: RecCard[] } {
     if (bracketStart >= 0 && bracketEnd > bracketStart) {
       try {
         const parsed = JSON.parse(jsonPart.slice(bracketStart, bracketEnd + 1)) as { id: string; reason: string; highlight?: string }[];
-        recs = parsed
-          .map((rec) => {
-            const r = restaurants.find((res) => res.id === rec.id);
-            if (!r) return null;
-            return {
-              id: r.id,
-              name: r.name,
-              area: r.area,
-              cuisine: r.cuisineTags.join(", "),
-              price: priceLabel[r.priceTier],
-              rating: r.rating,
-              imageUrl: r.imageUrl,
-              deals: r.deals.length,
-              reason: rec.reason,
-              highlight: rec.highlight,
-            };
-          })
-          .filter(Boolean) as RecCard[];
+        recs = parsed.map((rec) => ({ id: rec.id, reason: rec.reason, highlight: rec.highlight }));
       } catch { /* parse failed, no recs */ }
       text = raw.slice(0, recsIdx).trim();
     }
@@ -464,6 +440,13 @@ function MessageRow({ msg }: { msg: ChatMessage }) {
 }
 
 function RecCardComponent({ rec }: { rec: RecCard }) {
+  const restaurants = useRestaurantStore((s) => s.restaurants);
+  const r = restaurants.find((res) => res.id === rec.id);
+  const name = r?.name ?? "Restaurant";
+  const area = r?.area ?? "";
+  const cuisine = r?.cuisineTags?.join(", ") ?? "";
+  const imageUrl = r?.imageUrl ?? "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=200&auto=format&fit=crop&q=80";
+
   return (
     <Link
       href={`/restaurant/${rec.id}`}
@@ -471,8 +454,8 @@ function RecCardComponent({ rec }: { rec: RecCard }) {
     >
       <div className="w-[90px] shrink-0 overflow-hidden relative">
         <Image
-          src={rec.imageUrl}
-          alt={rec.name}
+          src={imageUrl}
+          alt={name}
           fill
           className="object-cover"
           sizes="90px"
@@ -480,24 +463,30 @@ function RecCardComponent({ rec }: { rec: RecCard }) {
       </div>
       <div className="p-3 flex-1 min-w-0">
         <p className="text-[14px] font-bold text-text-primary mb-[3px] truncate">
-          {rec.name}
+          {name}
         </p>
-        <div className="flex items-center gap-1.5 text-[12px] text-text-muted mb-1.5">
-          <span>{rec.area}</span>
-          <span>·</span>
-          <span>{rec.cuisine}</span>
-        </div>
+        {(area || cuisine) && (
+          <div className="flex items-center gap-1.5 text-[12px] text-text-muted mb-1.5">
+            {area && <span>{area}</span>}
+            {area && cuisine && <span>·</span>}
+            {cuisine && <span>{cuisine}</span>}
+          </div>
+        )}
         <p className="text-[12px] text-text-secondary leading-[1.5] line-clamp-2">
           {rec.reason}
         </p>
         <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
-          <span className="text-gold text-[11px]">★ {rec.rating}</span>
-          <span className="text-text-muted text-[11px]">·</span>
-          <span className="text-gold text-[11px] font-semibold">{rec.price}</span>
-          {rec.deals > 0 && (
-            <span className="px-2 py-[2px] rounded-[var(--radius-full)] text-[10px] font-bold bg-brand-dim text-brand-light border border-brand-border whitespace-nowrap">
-              {rec.deals} Deal{rec.deals > 1 ? "s" : ""}
-            </span>
+          {r && (
+            <>
+              <span className="text-gold text-[11px]">★ {r.rating || "—"}</span>
+              <span className="text-text-muted text-[11px]">·</span>
+              <span className="text-gold text-[11px] font-semibold">{priceLabel[r.priceTier]}</span>
+              {r.deals.length > 0 && (
+                <span className="px-2 py-[2px] rounded-[var(--radius-full)] text-[10px] font-bold bg-brand-dim text-brand-light border border-brand-border whitespace-nowrap">
+                  {r.deals.length} Deal{r.deals.length > 1 ? "s" : ""}
+                </span>
+              )}
+            </>
           )}
           {rec.highlight && (
             <span className="text-[11px] text-brand-light italic ml-auto truncate">

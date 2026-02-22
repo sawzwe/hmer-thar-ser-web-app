@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { restaurants } from "@/data/seed";
+import { createClient } from "@/lib/supabase/server";
+import { transformDbRestaurant } from "@/lib/restaurants/transform";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-const restaurantContext = restaurants.map((r) => ({
-  id: r.id,
-  name: r.name,
-  area: r.area,
-  cuisine: r.cuisineTags.join(", "),
-  price: "฿".repeat(r.priceTier),
-  rating: r.rating,
-  reviewCount: r.reviewCount,
-  deals: r.deals.length,
-  description: r.description,
-  transit: r.transitNearby.map((t) => `${t.type} ${t.name} (${t.walkingMinutes}min)`).join(", "),
-}));
+const priceLabel = (tier: number) => "฿".repeat(tier);
 
-const SYSTEM_PROMPT = `You are a warm, knowledgeable Bangkok food advisor for the Hmar Thar Sar restaurant booking app. Your job is to help users figure out where to eat based on their situation, mood, budget, or occasion.
+function buildSystemPrompt(restaurantContext: { id: string; name: string; area: string; cuisine: string; price: string; rating: number; reviewCount: number; deals: number; description: string; transit: string }[]) {
+  return `You are a warm, knowledgeable Bangkok food advisor for the Hmar Thar Sar restaurant booking app. Your job is to help users figure out where to eat based on their situation, mood, budget, or occasion.
 
 You have access to these Bangkok restaurants:
 ${JSON.stringify(restaurantContext, null, 2)}
@@ -35,95 +26,84 @@ Guidelines:
 - If budget is mentioned → respect it strictly
 - If area is mentioned → prioritize nearby places with transit info
 - After giving recommendations, suggest 2-3 natural follow-up questions the user might ask`;
+}
 
 interface GeminiMessage {
   role: "user" | "model";
   parts: { text: string }[];
 }
 
+type RestaurantForChat = { id: string; name: string; area: string; cuisineTags: string[]; priceTier: number; rating: number; deals: unknown[]; description: string; transitNearby?: { name: string; type: string; walkingMinutes: number }[] };
+
 /** Demo fallback when API fails or quota exceeded. Returns text + RECS line. */
-function getDemoResponse(userMessage: string): string {
+function getDemoResponse(userMessage: string, restaurants: RestaurantForChat[]): string {
   const lower = userMessage.toLowerCase();
   const rec = (id: string, reason: string, highlight?: string) =>
     `{"id":"${id}","reason":"${reason}"${highlight ? `,"highlight":"${highlight}"` : ""}}`;
 
+  const pick = (n: number) => restaurants.slice(0, Math.min(n, restaurants.length));
+  const [a, b, c] = pick(3);
+
+  if (restaurants.length === 0) {
+    return `I'd love to help you find a restaurant, but we don't have any spots in our system yet. Check back soon!`;
+  }
+
   // Valentine / date / romantic
-  if (/valentine|date night|romantic|partner|anniversary/.test(lower)) {
-    const r2 = restaurants.find((r) => r.id === "r2")!;
-    const r3 = restaurants.find((r) => r.id === "r3")!;
-    const r1 = restaurants.find((r) => r.id === "r1")!;
+  if (/valentine|date night|romantic|partner|anniversary/.test(lower) && a && b) {
     return `Oh, Valentine's is the best excuse to splurge a little! 🥂 For a memorable night in Bangkok, you want atmosphere, great food, and a spot where the lighting does the work. Here are my top picks:
 
-RECS:[${rec("r2", "La Piazza is *the* Valentine's move — candlelit Italian, an excuse to share pasta and split a bottle. Book the corner table.", "Request corner table")},${rec("r3", "Sakura Garden's omakase is an experience, not just dinner. Intimate counter, chef's selection. Book ahead.", "Omakase ฿2,800/pp")},${rec("r1", "Saffron Thai for something romantic but not stuffy — cozy setting, 20% off dinner Sun–Thu.")}]`;
+RECS:[${rec(a.id, `${a.name}: ${a.description.slice(0, 80)}...`, "Book ahead")}${b ? `,${rec(b.id, `${b.name}: ${b.description.slice(0, 60)}...`)}` : ""}]`;
   }
 
   // Spicy / cheap / solo
-  if (/spicy|cheap|solo|lunch|budget|affordable/.test(lower)) {
-    const r1 = restaurants.find((r) => r.id === "r1")!;
-    const r5 = restaurants.find((r) => r.id === "r5")!;
-    const r4 = restaurants.find((r) => r.id === "r4")!;
+  if (/spicy|cheap|solo|lunch|budget|affordable/.test(lower) && a && b) {
     return `Solo spicy lunch — respect. Bangkok does this better than anywhere. Quick and no-fuss:
 
-RECS:[${rec("r1", "Saffron Thai: solid Thai in Sukhumvit, lunch set under ฿450. Tom yum and pad thai hit the spot.")},${rec("r5", "Spice Route for real heat — tandoori and biryani, ฿฿. Great for a filling solo meal.")},${rec("r4", "Burger Republic near Siam BTS: burger + beer combo ฿350. Casual, fast.")}]`;
+RECS:[${rec(a.id, `${a.name}: ${a.description.slice(0, 70)}.`)}${b ? `,${rec(b.id, `${b.name}: ${b.description.slice(0, 60)}.`)}` : ""}]`;
   }
 
   // Team / group
-  if (/team|group|people|party|dinner for|8 |6 people/.test(lower)) {
-    const r2 = restaurants.find((r) => r.id === "r2")!;
-    const r1 = restaurants.find((r) => r.id === "r1")!;
-    const r5 = restaurants.find((r) => r.id === "r5")!;
+  if (/team|group|people|party|dinner for|8 |6 people/.test(lower) && a && b && c) {
     return `Team dinner — nice. You want a place that can handle a big table and mixed tastes. Here are spots that work:
 
-RECS:[${rec("r2", "La Piazza: pizza & pasta buffet ฿890/head, easy to please everyone. Silom, near BTS.")},${rec("r1", "Saffron Thai: 20% off dinner for 2+ guests. Cozy, good for groups.")},${rec("r5", "Spice Route: vibrant Indian, live music on weekends. Great for groups who like flavor.")}]`;
+RECS:[${rec(a.id, `${a.name}: good for groups. ${a.area}.`)},${rec(b.id, `${b.name}: ${b.description.slice(0, 50)}...`)},${rec(c.id, `${c.name}: ${c.area}.`)}]`;
   }
 
   // Hangover / casual / comfort
-  if (/hangover|comfort|casual|chill|relax/.test(lower)) {
-    const r4 = restaurants.find((r) => r.id === "r4")!;
-    const r1 = restaurants.find((r) => r.id === "r1")!;
+  if (/hangover|comfort|casual|chill|relax/.test(lower) && a && b) {
     return `Hangover mode — we've all been there. You want something uncomplicated and satisfying:
 
-RECS:[${rec("r4", "Burger Republic: burgers, loaded fries, craft beer. Open late, no dress code.")},${rec("r1", "Saffron Thai: tom yum and pad thai in a cozy spot. Comfort in a bowl.")}]`;
+RECS:[${rec(a.id, `${a.name}: ${a.description.slice(0, 60)}...`)},${rec(b.id, `${b.name}: ${b.description.slice(0, 60)}.`)}]`;
   }
 
   // Business / quiet / impressive
-  if (/business|lunch|quiet|impressive|sathorn|professional/.test(lower)) {
-    const r3 = restaurants.find((r) => r.id === "r3")!;
-    const r2 = restaurants.find((r) => r.id === "r2")!;
+  if (/business|lunch|quiet|impressive|sathorn|professional/.test(lower) && a && b) {
     return `Business lunch — you need somewhere that feels polished but not stiff. These work well:
 
-RECS:[${rec("r3", "Sakura Garden: premium Japanese, omakase or à la carte. Quiet, impressive.")},${rec("r2", "La Piazza Silom: Italian, professional setting. Pizza & pasta buffet 12–3 if you want value.")}]`;
+RECS:[${rec(a.id, `${a.name}: ${a.area}. ${a.description.slice(0, 50)}...`)},${rec(b.id, `${b.name}: professional setting.`)}]`;
   }
 
   // Family / parents / not too spicy
-  if (/family|parents|visiting|myanmar|burmese|not too spicy|mild/.test(lower)) {
-    const r1 = restaurants.find((r) => r.id === "r1")!;
-    const r2 = restaurants.find((r) => r.id === "r2")!;
+  if (/family|parents|visiting|myanmar|burmese|not too spicy|mild/.test(lower) && a && b) {
     return `Family dinner with visitors — you want welcoming, varied menu, and spice levels you can control. Try:
 
-RECS:[${rec("r1", "Saffron Thai: authentic but you can ask for mild. Cozy, good for sharing.")},${rec("r2", "La Piazza: Italian is a safe bet for mixed groups. Pasta and pizza please everyone.")}]`;
+RECS:[${rec(a.id, `${a.name}: authentic, you can ask for mild.`)},${rec(b.id, `${b.name}: safe bet for mixed groups.`)}]`;
   }
 
   // Burmese text (မြန်မာ)
-  if (/[\u1000-\u109F]/.test(userMessage)) {
-    const r1 = restaurants.find((r) => r.id === "r1")!;
-    const r2 = restaurants.find((r) => r.id === "r2")!;
+  if (/[\u1000-\u109F]/.test(userMessage) && a && b) {
     return `ညနေစာစားချင်ရင် ဒီဆိုင်တွေကောင်းတယ်။ ဘန်ကောက်မှာ ထိုင်းနဲ့ အပြည်ပြည်ဆိုင်ရာ ဟင်းတွေ ရှိတယ်။
 
-RECS:[${rec("r1", "Saffron Thai — ထိုင်းဟင်းလျာများ၊ နွေးထွေးတဲ့ပတ်ဝန်းကျင်။")},${rec("r2", "La Piazza — အီတလီ ပီဇာနဲ့ ခေါက်ဆွဲ၊ လေ့လာကြည့်ပါ။")}]`;
+RECS:[${rec(a.id, `${a.name} — ${a.description.slice(0, 40)}...`)},${rec(b.id, `${b.name} — လေ့လာကြည့်ပါ။`)}]`;
   }
 
   // Surprise me / something new
-  if (/surprise|something new|never had|recommend|suggest/.test(lower)) {
-    const r3 = restaurants.find((r) => r.id === "r3")!;
-    const r5 = restaurants.find((r) => r.id === "r5")!;
-    const r2 = restaurants.find((r) => r.id === "r2")!;
+  if (/surprise|something new|never had|recommend|suggest/.test(lower) && a && b && c) {
     return `Okay, I'll mix it up. Three very different vibes — pick your mood:
 
-RECS:[${rec("r3", "Sakura Garden: omakase Japanese. Let the chef decide. Trust the process.")},${rec("r5", "Spice Route: bold Indian, tandoori and biryani. Live sitar on weekends.")},${rec("r2", "La Piazza: wood-fired pizza and pasta. Classic Italian done right.")}]`;
+RECS:[${rec(a.id, `${a.name}: ${a.description.slice(0, 50)}...`)},${rec(b.id, `${b.name}: ${b.description.slice(0, 50)}...`)},${rec(c.id, `${c.name}: ${c.description.slice(0, 50)}.`)}]`;
   }
 
-  // Default: ask a bit more
   return `I'd love to help you find the perfect spot! To narrow it down — are you thinking **lunch or dinner**, and roughly how many people? Any area of Bangkok you're near (e.g. Silom, Sukhumvit, Siam)?`;
 }
 
@@ -139,8 +119,51 @@ export async function POST(request: NextRequest) {
   const lastUser = messages.filter((m) => m.role === "user").pop();
   const lastUserContent = lastUser?.content ?? "";
 
+  let restaurants: RestaurantForChat[] = [];
   try {
+    const supabase = await createClient();
+    const { data: rows } = await supabase
+      .from("restaurants")
+      .select("*, deals(id, title, type, description, price, discount, discount_pct, conditions)")
+      .eq("status", "active")
+      .order("name");
+    restaurants = (rows ?? []).map((row) => {
+      const dealsRaw = (row as { deals?: unknown }).deals ?? [];
+      const deals = Array.isArray(dealsRaw) ? dealsRaw : [];
+      const r = transformDbRestaurant(row as Parameters<typeof transformDbRestaurant>[0], {
+        deals: deals.map((d: Record<string, unknown>) => ({
+          id: String(d.id ?? ""),
+          title: String(d.title ?? ""),
+          type: String(d.type ?? "discount"),
+          description: String(d.description ?? ""),
+          price: d.price as number | undefined,
+          discount: d.discount as number | undefined,
+          discount_pct: d.discount_pct as number | undefined,
+          conditions: d.conditions as string | undefined,
+        })),
+      });
+      return { ...r, deals: r.deals };
+    });
+  } catch {
+    // continue with empty list; demo will handle it
+  }
 
+  const restaurantContext = restaurants.map((r) => ({
+    id: r.id,
+    name: r.name,
+    area: r.area,
+    cuisine: r.cuisineTags.join(", "),
+    price: priceLabel(r.priceTier),
+    rating: r.rating,
+    reviewCount: 0,
+    deals: r.deals.length,
+    description: r.description,
+    transit: (r.transitNearby ?? []).map((t) => `${t.type} ${t.name} (${t.walkingMinutes}min)`).join(", "),
+  }));
+
+  const SYSTEM_PROMPT = buildSystemPrompt(restaurantContext);
+
+  try {
     // Try real API first if key exists
     if (GEMINI_API_KEY) {
       const geminiMessages: GeminiMessage[] = messages.map((m) => ({
@@ -173,10 +196,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Demo mode: keyword-based responses with real restaurant recs
-    const text = getDemoResponse(lastUserContent);
+    const text = getDemoResponse(lastUserContent, restaurants);
     return NextResponse.json({ text });
   } catch {
-    const text = getDemoResponse(lastUserContent);
+    const text = getDemoResponse(lastUserContent, restaurants);
     return NextResponse.json({ text });
   }
 }
