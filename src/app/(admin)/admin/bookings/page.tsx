@@ -1,32 +1,55 @@
-import { createClient } from "@/lib/supabase/server";
-import { UserFactory } from "@/lib/auth/UserFactory";
+"use client";
 
-export default async function AdminBookingsPage() {
-  const supabase = await createClient();
-  await UserFactory.fromSupabase(supabase);
+import { useQuery } from "@tanstack/react-query";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { TableSkeleton } from "@/components/admin/AdminPageSkeleton";
 
-  const { data: bookings } = await supabase
-    .from("bookings")
-    .select("id, booking_ref, customer_name, date, time, status, restaurant_id")
-    .order("date", { ascending: false })
-    .order("time", { ascending: false })
-    .limit(100);
+type Booking = {
+  id: string;
+  booking_ref: string;
+  customer_name: string;
+  date: string;
+  time: string;
+  status: string;
+  restaurant_id: string;
+};
+
+export default function AdminBookingsPage() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-bookings"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/bookings");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed to load");
+      return json as { bookings: Booking[] };
+    },
+  });
+
+  const bookings = data?.bookings ?? [];
+
+  if (error) {
+    return (
+      <div className="p-8 animate-admin-enter">
+        <p className="text-danger">{(error as Error).message}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8">
-      <h1 className="font-serif text-2xl font-bold text-text-primary mb-2">
-        All Bookings
-      </h1>
-      <p className="text-sm text-text-muted mb-8">
-        Cross-restaurant view. Filter and export via API.
-      </p>
+    <div className="p-8 animate-admin-enter">
+      <AdminPageHeader
+        title="Bookings"
+        subtitle="Cross-restaurant view. Filter and export via API."
+      />
 
-      {!bookings?.length ? (
-        <div className="bg-card border border-border rounded-[var(--radius-lg)] p-8 text-center text-text-muted text-sm">
+      {isLoading ? (
+        <TableSkeleton rows={10} cols={4} />
+      ) : !bookings.length ? (
+        <div className="bg-card border border-border rounded-[14px] p-8 text-center text-text-muted text-[13px]">
           No bookings.
         </div>
       ) : (
-        <div className="border border-border rounded-[var(--radius-lg)] overflow-x-auto">
+        <div className="bg-card border border-border rounded-[14px] overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-surface border-b border-border">

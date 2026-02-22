@@ -514,32 +514,4 @@ export const restaurants: Restaurant[] = [
   },
 ];
 
-export const AREAS = [
-  "Sukhumvit",
-  "Silom",
-  "Thonglor",
-  "Siam",
-  "Chinatown",
-  "Riverside",
-  "Ari",
-];
-
-export const CUISINES = [
-  "Thai",
-  "Italian",
-  "Japanese",
-  "American",
-  "Indian",
-  "Chinese",
-  "Korean",
-  "French",
-  "Mexican",
-  "Seafood",
-  "Vegetarian",
-  "European",
-  "Asian",
-  "BBQ",
-  "Burgers",
-  "Healthy",
-  "Latin",
-];
+export { AREAS, CUISINES } from "./constants";

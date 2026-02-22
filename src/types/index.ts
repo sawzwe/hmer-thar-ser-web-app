@@ -44,7 +44,9 @@ export interface Restaurant {
   id: string;
   name: string;
   description: string;
+  /** Area = neighbourhood (Silom, Sukhumvit, etc.) */
   area: string;
+  /** Full formatted address for display (street, subdistrict, district, province) */
   address: string;
   geo: Geo;
   transitNearby: TransitStop[];

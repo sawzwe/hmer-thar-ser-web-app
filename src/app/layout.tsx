@@ -23,8 +23,9 @@ const notoMyanmar = Noto_Sans_Myanmar({
 });
 
 export const metadata: Metadata = {
-  title: "Hmar Thar Sar - Restaurant Booking",
+  title: "Mher Thar Ser - Restaurant Booking",
   description: "Discover restaurants, find deals, and book tables instantly.",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({

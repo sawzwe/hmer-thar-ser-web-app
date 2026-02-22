@@ -1,4 +1,4 @@
-# Hmar Thar Sar — Features & How to Use
+# Mher Thar Ser — Features & How to Use
 
 **Environment:** For full admin user management (list users, suspend, change roles), set `SUPABASE_SERVICE_ROLE_KEY` in your env (from Supabase Dashboard → Settings → API). Never expose this key to the client.
 

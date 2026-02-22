@@ -6,6 +6,9 @@ type DbRestaurant = {
   description: string;
   area: string;
   address: string;
+  province?: string | null;
+  district?: string | null;
+  subdistrict?: string | null;
   lat?: number;
   lng?: number;
   cuisine_tags?: string[] | null;
@@ -49,16 +52,23 @@ function parseOpeningHours(oh: unknown): DayHours[] {
   return (oh as DayHours[]).length > 0 ? (oh as DayHours[]) : defaultHours;
 }
 
-function parseTransit(tn: unknown): { name: string; type: "BTS" | "MRT" | "ARL"; walkingMinutes: number }[] {
+function parseTransit(
+  tn: unknown,
+): { name: string; type: "BTS" | "MRT" | "ARL"; walkingMinutes: number }[] {
   if (!tn || !Array.isArray(tn)) return [];
-  return (tn as { name?: string; type?: string; walkingMinutes?: number }[]).map((x) => ({
+  return (
+    tn as { name?: string; type?: string; walkingMinutes?: number }[]
+  ).map((x) => ({
     name: x.name ?? "",
-    type: (x.type === "BTS" || x.type === "MRT" || x.type === "ARL" ? x.type : "BTS") as "BTS" | "MRT" | "ARL",
+    type: (x.type === "BTS" || x.type === "MRT" || x.type === "ARL"
+      ? x.type
+      : "BTS") as "BTS" | "MRT" | "ARL",
     walkingMinutes: typeof x.walkingMinutes === "number" ? x.walkingMinutes : 5,
   }));
 }
 
-const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=80";
+const DEFAULT_IMAGE =
+  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=80";
 
 type RestaurantRow = {
   id: string;
@@ -66,6 +76,9 @@ type RestaurantRow = {
   description?: string;
   area?: string;
   address?: string;
+  province?: string | null;
+  district?: string | null;
+  subdistrict?: string | null;
   lat?: number;
   lng?: number;
   cuisine_tags?: string[] | null;
@@ -78,9 +91,24 @@ type RestaurantRow = {
   status?: string;
 };
 
+function buildFullAddress(row: {
+  address?: string;
+  subdistrict?: string | null;
+  district?: string | null;
+  province?: string | null;
+}): string {
+  const parts = [
+    row.address?.trim(),
+    row.subdistrict?.trim(),
+    row.district?.trim(),
+    row.province?.trim(),
+  ].filter(Boolean) as string[];
+  return parts.length > 0 ? parts.join(", ") : "Address to be added.";
+}
+
 export function transformDbRestaurant(
   row: DbRestaurant | RestaurantRow,
-  opts?: { deals?: DbDeal[]; reviewCount?: number; avgRating?: number }
+  opts?: { deals?: DbDeal[]; reviewCount?: number; avgRating?: number },
 ): Restaurant {
   const deals: Deal[] = (opts?.deals ?? []).map((d) => ({
     id: d.id,
@@ -101,7 +129,7 @@ export function transformDbRestaurant(
     name: row.name,
     description: row.description ?? "",
     area: row.area ?? "",
-    address: row.address ?? "",
+    address: buildFullAddress(row),
     geo: {
       lat: Number(row.lat) || 13.7563,
       lng: Number(row.lng) || 100.5018,

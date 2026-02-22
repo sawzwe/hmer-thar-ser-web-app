@@ -1,5 +1,5 @@
 {
-  "name": "hmar_thar_sar",
+  "name": "mher_thar_ser",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,8 +11,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
+    "@tanstack/react-query": "^5.90.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type UserRow = {
   id: string;
@@ -15,44 +17,32 @@ type UserRow = {
 };
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<UserRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
   const [acting, setActing] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(search), 300);
     return () => clearTimeout(t);
   }, [search]);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (searchDebounced) params.set("q", searchDebounced);
-    fetch(`/api/admin/users?${params}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (cancelled) return;
-        if (data.error) throw new Error(data.error);
-        setUsers(data.users ?? []);
-      })
-      .catch((err) => {
-        if (!cancelled) setUsers([]);
-        setMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to load users" });
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [searchDebounced]);
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-users", searchDebounced],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchDebounced) params.set("q", searchDebounced);
+      const res = await fetch(`/api/admin/users?${params}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed to load users");
+      return json as { users: UserRow[] };
+    },
+  });
+  const users = data?.users ?? [];
 
   const setStatus = async (userId: string, status: "active" | "suspended") => {
-    setActing(userId);
+    setActing(`status-${userId}`);
     setMessage(null);
     try {
       const res = await fetch(`/api/admin/users/${userId}/status`, {
@@ -63,13 +53,8 @@ export default function AdminUsersPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed");
       setMessage({ type: "success", text: status === "suspended" ? "User suspended" : "User activated" });
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userId
-            ? { ...u, banned_until: status === "suspended" ? "banned" : null }
-            : u
-        )
-      );
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
     } catch (err) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Failed" });
     } finally {
@@ -89,15 +74,8 @@ export default function AdminUsersPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed");
       setMessage({ type: "success", text: `Role ${action === "add" ? "added" : "removed"}` });
-      setUsers((prev) =>
-        prev.map((u) => {
-          if (u.id !== userId) return u;
-          const roles = new Set(u.roles);
-          if (action === "add") roles.add(role);
-          else roles.delete(role);
-          return { ...u, roles: Array.from(roles) };
-        })
-      );
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
     } catch (err) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Failed" });
     } finally {
@@ -105,16 +83,37 @@ export default function AdminUsersPage() {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    if (!confirm("Permanently delete this user? This cannot be undone.")) return;
+    setActing(`del-${userId}`);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed");
+      setMessage({ type: "success", text: "User deleted" });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+    } catch (err) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to delete" });
+    } finally {
+      setActing(null);
+    }
+  };
+
   const isBanned = (u: UserRow) => !!u.banned_until;
+  const isActingOn = (u: UserRow) =>
+    acting !== null &&
+    (acting === `status-${u.id}` ||
+      acting === `del-${u.id}` ||
+      acting.startsWith(`${u.id}-`));
 
   return (
-    <div className="p-8">
-      <h1 className="font-serif text-2xl font-bold text-text-primary mb-2">
-        Users
-      </h1>
-      <p className="text-sm text-text-muted mb-6">
-        Search and manage users. Suspend/activate and change roles (superadmin only).
-      </p>
+    <div className="p-8 animate-admin-enter">
+      <AdminPageHeader
+        title="Users & roles"
+        subtitle="Search and manage users. Suspend/activate and change roles (superadmin only)."
+      />
 
       <div className="mb-6 flex items-center gap-4">
         <Input
@@ -128,7 +127,7 @@ export default function AdminUsersPage() {
 
       {message && (
         <div
-          className={`mb-4 px-4 py-2 rounded-[var(--radius-md)] text-sm ${
+          className={`mb-6 px-4 py-3 rounded-[14px] text-[13px] ${
             message.type === "success"
               ? "bg-success-dim text-success border border-success-border"
               : "bg-danger-dim text-danger border border-danger-border"
@@ -138,16 +137,16 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {loading ? (
-        <div className="bg-card border border-border rounded-[var(--radius-lg)] p-8 text-center text-text-muted text-sm">
+      {isLoading ? (
+        <div className="bg-card border border-border rounded-[14px] p-8 text-center text-text-muted text-[13px]">
           Loading users…
         </div>
       ) : !users.length ? (
-        <div className="bg-card border border-border rounded-[var(--radius-lg)] p-8 text-center text-text-muted text-sm">
+        <div className="bg-card border border-border rounded-[14px] p-8 text-center text-text-muted text-[13px]">
           {searchDebounced ? "No users match your search." : "No users found."}
         </div>
       ) : (
-        <div className="border border-border rounded-[var(--radius-lg)] overflow-hidden">
+        <div className="bg-card border border-border rounded-[14px] overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="bg-surface border-b border-border">
@@ -198,24 +197,34 @@ export default function AdminUsersPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex flex-wrap gap-2 justify-end">
+                    <div className="flex flex-wrap gap-2 justify-end items-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={isActingOn(u)}
+                        onClick={() => deleteUser(u.id)}
+                        className="text-danger hover:text-danger hover:bg-danger-dim text-[11px]"
+                        title="Permanently delete user"
+                      >
+                        {acting === `del-${u.id}` ? "…" : "Delete"}
+                      </Button>
                       {isBanned(u) ? (
                         <Button
                           variant="ghost"
                           size="sm"
-                          disabled={!!acting}
+                          disabled={isActingOn(u)}
                           onClick={() => setStatus(u.id, "active")}
                         >
-                          {acting === u.id ? "…" : "Activate"}
+                          {acting === `status-${u.id}` ? "…" : "Activate"}
                         </Button>
                       ) : (
                         <Button
                           variant="danger"
                           size="sm"
-                          disabled={!!acting}
+                          disabled={isActingOn(u)}
                           onClick={() => setStatus(u.id, "suspended")}
                         >
-                          {acting === u.id ? "…" : "Suspend"}
+                          {acting === `status-${u.id}` ? "…" : "Suspend"}
                         </Button>
                       )}
                       {["customer", "vendor", "admin"].map((role) => (
@@ -223,7 +232,7 @@ export default function AdminUsersPage() {
                           key={role}
                           variant="ghost"
                           size="sm"
-                          disabled={!!acting}
+                          disabled={isActingOn(u)}
                           onClick={() =>
                             toggleRole(u.id, role, u.roles.includes(role) ? "remove" : "add")
                           }

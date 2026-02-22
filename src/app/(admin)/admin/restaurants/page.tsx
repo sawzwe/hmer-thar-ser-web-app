@@ -1,41 +1,58 @@
-import { createClient } from "@/lib/supabase/server";
-import { UserFactory } from "@/lib/auth/UserFactory";
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { Plus } from "@phosphor-icons/react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { TableSkeleton } from "@/components/admin/AdminPageSkeleton";
 
-export default async function AdminRestaurantsPage() {
-  const supabase = await createClient();
-  await UserFactory.fromSupabase(supabase);
+type Restaurant = { id: string; name: string; slug: string | null; area: string; status: string };
 
-  const { data: restaurants } = await supabase
-    .from("restaurants")
-    .select("id, name, slug, area, status")
-    .order("name");
+export default function AdminRestaurantsPage() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-restaurants"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/restaurants/list");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed to load");
+      return json as { restaurants: Restaurant[] };
+    },
+  });
+
+  const restaurants = data?.restaurants ?? [];
+
+  if (error) {
+    return (
+      <div className="p-8 animate-admin-enter">
+        <p className="text-danger">{(error as Error).message}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-serif text-2xl font-bold text-text-primary mb-2">
-            Restaurants
-          </h1>
-          <p className="text-sm text-text-muted">
-            All restaurants. Change status via API.
-          </p>
-        </div>
-        <Link
-          href="/admin/restaurants/new"
-          className="px-4 py-2 rounded-[var(--radius-md)] bg-[#9B7CF5] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-        >
-          + Add restaurant
-        </Link>
-      </div>
+    <div className="p-8 animate-admin-enter">
+      <AdminPageHeader
+        title="Restaurants"
+        subtitle="All restaurants. Change status via API."
+        action={
+          <Link
+            href="/admin/restaurants/new"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-brand text-white hover:bg-brand-hover transition-colors"
+          >
+            <Plus size={16} weight="bold" />
+            Add restaurant
+          </Link>
+        }
+      />
 
-      {!restaurants?.length ? (
-        <div className="bg-card border border-border rounded-[var(--radius-lg)] p-8 text-center text-text-muted text-sm">
+      {isLoading ? (
+        <TableSkeleton rows={8} cols={4} />
+      ) : !restaurants.length ? (
+        <div className="bg-card border border-border rounded-[14px] p-8 text-center text-text-muted text-[13px]">
           No restaurants.
         </div>
       ) : (
-        <div className="border border-border rounded-[var(--radius-lg)] overflow-hidden">
+        <div className="bg-card border border-border rounded-[14px] overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="bg-surface border-b border-border">
@@ -76,10 +93,10 @@ export default async function AdminRestaurantsPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
-                      href={`/vendor/restaurants/${r.id}`}
+                      href={`/admin/restaurants/${r.id}`}
                       className="text-sm text-brand-light hover:underline"
                     >
-                      View in CMS
+                      Edit
                     </Link>
                   </td>
                 </tr>

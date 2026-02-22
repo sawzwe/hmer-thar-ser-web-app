@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════
-   DESIGN TOKENS — HMAR THAR SAR
+   DESIGN TOKENS — Mher Thar Ser
    Restaurant Booking · Bangkok · EN + MY (Burmese)
 ═══════════════════════════════════════════════════════════════════ */
 
@@ -126,6 +126,9 @@
   --font-sans: var(--font-dm-sans);
   --font-serif: var(--font-playfair);
   --font-my: var(--font-noto-myanmar);
+
+  /* Typography: Serif (Playfair) for brand/public pages only (landing, restaurant detail, nav logo).
+     Sans (DM Sans) for all functional UI: admin, vendor, auth, bookings, chat, modals, forms. */
 }
 
 body {
@@ -143,6 +146,28 @@ body {
   font-family: var(--font-my), 'Padauk', sans-serif;
   line-height: 1.9;
   letter-spacing: 0.01em;
+}
+
+/* ── Time input: visible clock icon on dark background ── */
+input[type="time"] {
+  padding-inline-end: 1.25rem;
+}
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.75;
+  padding: 0.125rem;
+  margin-inline-start: 0;
+  cursor: pointer;
+}
+
+/* ── Select: custom arrow with padding from right edge ── */
+.select-arrow-padding {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23A09F97' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.75rem;
 }
 
 /* ── Scrollbar ── */
@@ -188,9 +213,32 @@ body {
   to { transform: rotate(360deg); }
 }
 
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes adminPageEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-fade-in { animation: fadeIn var(--dur-slow) var(--ease-out) both; }
 .animate-slide-up { animation: slideUp var(--dur-slow) var(--ease-spring) both; }
 .animate-slide-down { animation: slideDown var(--dur-slow) var(--ease-out) both; }
 .animate-overlay { animation: overlayShow var(--dur-base) var(--ease-out) both; }
 .animate-pulse-dot { animation: pulse 2s infinite; }
 .animate-spin { animation: spin 0.7s linear infinite; }
+.animate-admin-enter { animation: adminPageEnter 0.3s var(--ease-out) both; }
+
+/* Admin skeleton shimmer */
+.admin-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface) 0%,
+    var(--card) 50%,
+    var(--surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
