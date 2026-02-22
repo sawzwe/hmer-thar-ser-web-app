@@ -1,4 +1,4 @@
-# Hmar Thar Sar — Database Schema & Auth
+# Mher Thar Ser — Database Schema & Auth
 
 This document defines the **database schema** and **auth strategy** for moving from local-only to a real backend: **signed-up users**, **guest users**, and **vendors** (restaurant owners).
 
@@ -12,7 +12,7 @@ This document defines the **database schema** and **auth strategy** for moving f
 | **Supabase Auth** | Built-in DB (Postgres), Auth + RLS, realtime. One stack for auth + DB. | Vendor lock-in; need Supabase for backend. |
 | **Clerk** | Fastest to ship: hosted UI, users, orgs. Good for “vendors” as orgs. | Paid at scale; less control over data. |
 
-**Recommendation for Hmar Thar Sar**
+**Recommendation for Mher Thar Ser**
 
 - **NextAuth.js** if you want to own the stack and keep auth + DB flexible (e.g. Postgres elsewhere).
 - **Supabase (Auth + Postgres)** if you want one provider for both auth and database and are fine with Supabase.

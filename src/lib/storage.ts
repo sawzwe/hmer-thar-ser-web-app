@@ -1,4 +1,4 @@
-const NAMESPACE = "hmar_thar_sar";
+const NAMESPACE = "mher_thar_ser";
 const SCHEMA_VERSION = 2;
 const VERSION_KEY = `${NAMESPACE}:schema_version`;
 

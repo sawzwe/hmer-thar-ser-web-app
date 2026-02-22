@@ -75,7 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             H
           </div>
           <span className="font-serif text-[16px] font-bold text-text-primary tracking-[-0.3px] whitespace-nowrap">
-            Hmar Thar Sar
+            Mher Thar Ser
           </span>
         </Link>
 
@@ -193,7 +193,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <footer className="border-t border-border py-6 px-6 md:px-8 flex items-center justify-between">
           <div>
             <span className="font-serif text-[15px] font-bold text-text-primary">
-              Hmar Thar Sar
+              Mher Thar Ser
             </span>
             <span className="text-[12px] text-text-muted ml-2">
               &copy; {new Date().getFullYear()}

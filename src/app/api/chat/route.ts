@@ -7,7 +7,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const priceLabel = (tier: number) => "฿".repeat(tier);
 
 function buildSystemPrompt(restaurantContext: { id: string; name: string; area: string; cuisine: string; price: string; rating: number; reviewCount: number; deals: number; description: string; transit: string }[]) {
-  return `You are a warm, knowledgeable Bangkok food advisor for the Hmar Thar Sar restaurant booking app. Your job is to help users figure out where to eat based on their situation, mood, budget, or occasion.
+  return `You are a warm, knowledgeable Bangkok food advisor for the Mher Thar Ser restaurant booking app. Your job is to help users figure out where to eat based on their situation, mood, budget, or occasion.
 
 You have access to these Bangkok restaurants:
 ${JSON.stringify(restaurantContext, null, 2)}

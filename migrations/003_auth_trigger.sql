@@ -54,7 +54,7 @@ CREATE TRIGGER on_auth_user_created
 INSERT INTO public.roles (slug, name, description) VALUES
   ('customer', 'Customer',           'Registered diner'),
   ('vendor',   'Restaurant Vendor',  'Restaurant owner / CMS user'),
-  ('admin',    'Platform Admin',     'Hmar Thar Sar operator')
+  ('admin',    'Platform Admin',     'Mher Thar Ser operator')
 ON CONFLICT (slug) DO NOTHING;
 
 -- PERMISSIONS

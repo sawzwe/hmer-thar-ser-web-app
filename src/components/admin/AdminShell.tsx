@@ -230,7 +230,7 @@ export function AdminShell({
         <header className="h-14 shrink-0 border-b border-border flex items-center justify-between px-7 bg-bg/60 backdrop-blur-xl">
           <div className="flex items-center gap-3">
             <span className="text-sm font-semibold text-text-secondary">
-              Hmar Thar Sar
+              Mher Thar Ser
             </span>
             <span className="text-text-disabled">/</span>
             <span className="text-sm font-semibold text-text-primary">{pageTitle}</span>
