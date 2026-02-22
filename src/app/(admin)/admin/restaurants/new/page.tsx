@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
-import { AREAS, CUISINES } from "@/data/constants";
+import {
+  AREAS,
+  CUISINES,
+  PROVINCES,
+  BANGKOK_DISTRICTS,
+  BANGKOK_SUBDISTRICTS_BY_DISTRICT,
+} from "@/data/constants";
 
 export default function NewRestaurantPage() {
   const router = useRouter();
@@ -100,7 +106,9 @@ export default function NewRestaurantPage() {
         <Textarea
           label="Description"
           value={form.description}
-          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, description: e.target.value }))
+          }
           placeholder="Short description for listings"
         />
         <Select
@@ -109,7 +117,9 @@ export default function NewRestaurantPage() {
           onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
         >
           {AREAS.map((a) => (
-            <option key={a} value={a}>{a}</option>
+            <option key={a} value={a}>
+              {a}
+            </option>
           ))}
         </Select>
         <Input
@@ -119,24 +129,54 @@ export default function NewRestaurantPage() {
           placeholder="e.g. 123 Sukhumvit Soi 31"
         />
         <div className="grid grid-cols-3 gap-4">
-          <Input
-            label="Subdistrict"
-            value={form.subdistrict}
-            onChange={(e) => setForm((f) => ({ ...f, subdistrict: e.target.value }))}
-            placeholder="e.g. Khlong Toei Nuea"
-          />
-          <Input
-            label="District"
-            value={form.district}
-            onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))}
-            placeholder="e.g. Watthana"
-          />
-          <Input
+          <Select
             label="Province"
             value={form.province}
-            onChange={(e) => setForm((f) => ({ ...f, province: e.target.value }))}
-            placeholder="e.g. Bangkok"
-          />
+            onChange={(e) =>
+              setForm((f) => ({ ...f, province: e.target.value }))
+            }
+          >
+            <option value="">Select province</option>
+            {PROVINCES.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="District"
+            value={form.district}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                district: e.target.value,
+                subdistrict: "",
+              }))
+            }
+          >
+            <option value="">Select district</option>
+            {[...BANGKOK_DISTRICTS].map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Subdistrict"
+            value={form.subdistrict}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, subdistrict: e.target.value }))
+            }
+          >
+            <option value="">Select subdistrict</option>
+            {(BANGKOK_SUBDISTRICTS_BY_DISTRICT[form.district] ?? []).map(
+              (s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ),
+            )}
+          </Select>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Input
@@ -153,7 +193,9 @@ export default function NewRestaurantPage() {
           />
         </div>
         <div>
-          <label className="text-[13px] font-semibold text-text-secondary block mb-2">Cuisine</label>
+          <label className="text-[13px] font-semibold text-text-secondary block mb-2">
+            Cuisine
+          </label>
           <div className="flex flex-wrap gap-2">
             {CUISINES.map((c) => (
               <button
@@ -174,7 +216,9 @@ export default function NewRestaurantPage() {
         <Select
           label="Price tier"
           value={form.price_tier}
-          onChange={(e) => setForm((f) => ({ ...f, price_tier: e.target.value }))}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, price_tier: e.target.value }))
+          }
         >
           <option value="1">฿ Budget</option>
           <option value="2">฿฿ Mid-range</option>
@@ -185,7 +229,9 @@ export default function NewRestaurantPage() {
           label="Image URL (optional)"
           type="url"
           value={form.image_url}
-          onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, image_url: e.target.value }))
+          }
           placeholder="https://..."
         />
         <div className="grid grid-cols-2 gap-4">
@@ -193,14 +239,18 @@ export default function NewRestaurantPage() {
             label="Open time"
             type="text"
             value={form.open_time}
-            onChange={(e) => setForm((f) => ({ ...f, open_time: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, open_time: e.target.value }))
+            }
             placeholder="11:00"
           />
           <Input
             label="Close time"
             type="text"
             value={form.close_time}
-            onChange={(e) => setForm((f) => ({ ...f, close_time: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, close_time: e.target.value }))
+            }
             placeholder="22:00"
           />
         </div>

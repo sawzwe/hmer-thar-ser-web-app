@@ -6,7 +6,13 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
-import { AREAS, CUISINES } from "@/data/constants";
+import {
+  AREAS,
+  CUISINES,
+  PROVINCES,
+  BANGKOK_DISTRICTS,
+  BANGKOK_SUBDISTRICTS_BY_DISTRICT,
+} from "@/data/constants";
 import { CardListSkeleton } from "@/components/admin/AdminPageSkeleton";
 
 type Restaurant = {
@@ -78,7 +84,9 @@ export default function AdminRestaurantEditPage() {
         subdistrict: restaurant.subdistrict ?? "",
         lat: String(restaurant.lat ?? "13.7563"),
         lng: String(restaurant.lng ?? "100.5018"),
-        cuisine_tags: Array.isArray(restaurant.cuisine_tags) ? restaurant.cuisine_tags : [],
+        cuisine_tags: Array.isArray(restaurant.cuisine_tags)
+          ? restaurant.cuisine_tags
+          : [],
         price_tier: String(restaurant.price_tier ?? 2),
         image_url: restaurant.image_url ?? "",
         open_time: restaurant.open_time?.slice(0, 5) ?? "11:00",
@@ -134,7 +142,10 @@ export default function AdminRestaurantEditPage() {
     return (
       <div className="p-8">
         <p className="text-danger">Restaurant not found.</p>
-        <Link href="/admin/restaurants" className="text-sm text-brand-light mt-2 inline-block">
+        <Link
+          href="/admin/restaurants"
+          className="text-sm text-brand-light mt-2 inline-block"
+        >
           ← Back to restaurants
         </Link>
       </div>
@@ -155,7 +166,8 @@ export default function AdminRestaurantEditPage() {
         Edit restaurant
       </h1>
       <p className="text-sm text-text-muted mb-8">
-        Update restaurant details. Vendors linked to this restaurant can manage it in the vendor CMS.
+        Update restaurant details. Vendors linked to this restaurant can manage
+        it in the vendor CMS.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -175,7 +187,9 @@ export default function AdminRestaurantEditPage() {
         <Textarea
           label="Description"
           value={form.description}
-          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, description: e.target.value }))
+          }
           placeholder="Short description for listings"
         />
         <Select
@@ -184,7 +198,9 @@ export default function AdminRestaurantEditPage() {
           onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
         >
           {AREAS.map((a) => (
-            <option key={a} value={a}>{a}</option>
+            <option key={a} value={a}>
+              {a}
+            </option>
           ))}
         </Select>
         <Input
@@ -194,24 +210,62 @@ export default function AdminRestaurantEditPage() {
           placeholder="e.g. 123 Sukhumvit Soi 31"
         />
         <div className="grid grid-cols-3 gap-4">
-          <Input
-            label="Subdistrict"
-            value={form.subdistrict}
-            onChange={(e) => setForm((f) => ({ ...f, subdistrict: e.target.value }))}
-            placeholder="e.g. Khlong Toei Nuea"
-          />
-          <Input
-            label="District"
-            value={form.district}
-            onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))}
-            placeholder="e.g. Watthana"
-          />
-          <Input
+          <Select
             label="Province"
             value={form.province}
-            onChange={(e) => setForm((f) => ({ ...f, province: e.target.value }))}
-            placeholder="e.g. Bangkok"
-          />
+            onChange={(e) =>
+              setForm((f) => ({ ...f, province: e.target.value }))
+            }
+          >
+            <option value="">Select province</option>
+            {PROVINCES.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="District"
+            value={form.district}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                district: e.target.value,
+                subdistrict: "",
+              }))
+            }
+          >
+            <option value="">Select district</option>
+            {[...BANGKOK_DISTRICTS].map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+            {form.district &&
+              !(BANGKOK_DISTRICTS as readonly string[]).includes(
+                form.district,
+              ) && <option value={form.district}>{form.district}</option>}
+          </Select>
+          <Select
+            label="Subdistrict"
+            value={form.subdistrict}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, subdistrict: e.target.value }))
+            }
+          >
+            <option value="">Select subdistrict</option>
+            {(BANGKOK_SUBDISTRICTS_BY_DISTRICT[form.district] ?? []).map(
+              (s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ),
+            )}
+            {form.subdistrict &&
+              !(BANGKOK_SUBDISTRICTS_BY_DISTRICT[form.district] ?? []).includes(
+                form.subdistrict,
+              ) && <option value={form.subdistrict}>{form.subdistrict}</option>}
+          </Select>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Input
@@ -228,7 +282,9 @@ export default function AdminRestaurantEditPage() {
           />
         </div>
         <div>
-          <label className="text-[13px] font-semibold text-text-secondary block mb-2">Cuisine</label>
+          <label className="text-[13px] font-semibold text-text-secondary block mb-2">
+            Cuisine
+          </label>
           <div className="flex flex-wrap gap-2">
             {CUISINES.map((c) => (
               <button
@@ -249,7 +305,9 @@ export default function AdminRestaurantEditPage() {
         <Select
           label="Price tier"
           value={form.price_tier}
-          onChange={(e) => setForm((f) => ({ ...f, price_tier: e.target.value }))}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, price_tier: e.target.value }))
+          }
         >
           <option value="1">฿ Budget</option>
           <option value="2">฿฿ Mid-range</option>
@@ -260,7 +318,9 @@ export default function AdminRestaurantEditPage() {
           label="Image URL (optional)"
           type="url"
           value={form.image_url}
-          onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, image_url: e.target.value }))
+          }
           placeholder="https://..."
         />
         <div className="grid grid-cols-2 gap-4">
@@ -268,14 +328,18 @@ export default function AdminRestaurantEditPage() {
             label="Open time"
             type="text"
             value={form.open_time}
-            onChange={(e) => setForm((f) => ({ ...f, open_time: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, open_time: e.target.value }))
+            }
             placeholder="11:00"
           />
           <Input
             label="Close time"
             type="text"
             value={form.close_time}
-            onChange={(e) => setForm((f) => ({ ...f, close_time: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, close_time: e.target.value }))
+            }
             placeholder="22:00"
           />
         </div>
@@ -311,7 +375,8 @@ export default function AdminRestaurantEditPage() {
       <div className="mt-12 pt-8 border-t border-border">
         <h2 className="font-semibold text-text-primary mb-4">Vendors</h2>
         <p className="text-sm text-text-muted mb-4">
-          Vendors linked to this restaurant can manage it in the vendor CMS (deals, slots, bookings). Use the claim flow or add vendors here.
+          Vendors linked to this restaurant can manage it in the vendor CMS
+          (deals, slots, bookings). Use the claim flow or add vendors here.
         </p>
         <VendorsSection restaurantId={id} />
       </div>
@@ -331,7 +396,9 @@ function VendorsSection({ restaurantId }: { restaurantId: string }) {
       const res = await fetch(`/api/admin/restaurants/${restaurantId}/vendors`);
       if (!res.ok) return { vendors: [] };
       const json = await res.json();
-      return json as { vendors: { vendor_id: string; role: string; email?: string }[] };
+      return json as {
+        vendors: { vendor_id: string; role: string; email?: string }[];
+      };
     },
   });
 
@@ -343,15 +410,20 @@ function VendorsSection({ restaurantId }: { restaurantId: string }) {
     setAddError(null);
     setAdding(true);
     try {
-      const res = await fetch(`/api/admin/restaurants/${restaurantId}/vendors`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), role: "owner" }),
-      });
+      const res = await fetch(
+        `/api/admin/restaurants/${restaurantId}/vendors`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), role: "owner" }),
+        },
+      );
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Failed");
       setEmail("");
-      queryClient.invalidateQueries({ queryKey: ["admin-restaurant-vendors", restaurantId] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-restaurant-vendors", restaurantId],
+      });
     } catch (err) {
       setAddError((err as Error).message);
     } finally {
@@ -362,12 +434,20 @@ function VendorsSection({ restaurantId }: { restaurantId: string }) {
   return (
     <div className="bg-card border border-border rounded-[var(--radius-lg)] p-4 space-y-4">
       {vendors.length === 0 ? (
-        <p className="text-sm text-text-muted">No vendors linked yet. Add one by email or have them claim from the public claim page.</p>
+        <p className="text-sm text-text-muted">
+          No vendors linked yet. Add one by email or have them claim from the
+          public claim page.
+        </p>
       ) : (
         <ul className="space-y-2">
           {vendors.map((v) => (
-            <li key={v.vendor_id} className="flex items-center justify-between text-sm">
-              <span className="text-text-primary">{v.email ?? v.vendor_id.slice(0, 8) + "…"}</span>
+            <li
+              key={v.vendor_id}
+              className="flex items-center justify-between text-sm"
+            >
+              <span className="text-text-primary">
+                {v.email ?? v.vendor_id.slice(0, 8) + "…"}
+              </span>
               <span className="text-text-muted text-xs">{v.role}</span>
             </li>
           ))}
@@ -385,9 +465,7 @@ function VendorsSection({ restaurantId }: { restaurantId: string }) {
           {adding ? "Adding…" : "Add vendor"}
         </Button>
       </form>
-      {addError && (
-        <p className="text-sm text-danger">{addError}</p>
-      )}
+      {addError && <p className="text-sm text-danger">{addError}</p>}
     </div>
   );
 }
