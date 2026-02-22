@@ -14,7 +14,9 @@ export default async function RestaurantEditorPage({
   const user = await UserFactory.fromSupabase(supabase);
 
   if (user.type !== "vendor") {
-    redirect(user.isAuthenticated() ? "/" : `/sign-in?next=/vendor/restaurants/${id}`);
+    redirect(
+      user.isAuthenticated() ? "/" : `/sign-in?next=/vendor/restaurants/${id}`,
+    );
   }
 
   const vendor = user as VendorUser;
@@ -70,7 +72,9 @@ export default async function RestaurantEditorPage({
       </nav>
 
       <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
-        <h2 className="font-semibold text-text-primary mb-4">Restaurant Info</h2>
+        <h2 className="font-semibold text-text-primary mb-4">
+          Restaurant Info
+        </h2>
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-text-muted">Name</dt>
@@ -80,9 +84,18 @@ export default async function RestaurantEditorPage({
             <dt className="text-text-muted">Area</dt>
             <dd className="text-text-primary">{restaurant.area}</dd>
           </div>
-          <div>
-            <dt className="text-text-muted">Address</dt>
-            <dd className="text-text-primary">{restaurant.address}</dd>
+          <div className="col-span-2">
+            <dt className="text-text-muted">Full address</dt>
+            <dd className="text-text-primary">
+              {[
+                restaurant.address,
+                restaurant.subdistrict,
+                restaurant.district,
+                restaurant.province,
+              ]
+                .filter(Boolean)
+                .join(", ") || "—"}
+            </dd>
           </div>
           <div>
             <dt className="text-text-muted">Status</dt>

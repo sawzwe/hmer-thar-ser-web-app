@@ -1,7 +1,7 @@
 "use client";
 
 import { useRestaurantStore, SortOption } from "@/stores/restaurantStore";
-import { AREAS, CUISINES } from "@/data/seed";
+import { AREAS, CUISINES } from "@/data/constants";
 import { cn } from "@/lib/utils";
 
 function Pill({ active, onClick, children }: { active?: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -54,13 +54,13 @@ export function SearchAndFilters() {
 
         <Pill active={!filters.area} onClick={() => setFilter("area", "")}>All</Pill>
 
-        {AREAS.slice(0, 4).map((a) => (
+        {AREAS.slice(0, 6).map((a) => (
           <Pill key={a} active={filters.area === a} onClick={() => setFilter("area", filters.area === a ? "" : a)}>
             {a} <span className="text-[9px] text-text-muted">▾</span>
           </Pill>
         ))}
 
-        {CUISINES.slice(0, 2).map((c) => (
+        {CUISINES.slice(0, 4).map((c) => (
           <Pill key={c} active={filters.cuisine === c} onClick={() => setFilter("cuisine", filters.cuisine === c ? "" : c)}>
             {c} <span className="text-[9px] text-text-muted">▾</span>
           </Pill>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
+import { AREAS, CUISINES } from "@/data/constants";
 
 export default function NewRestaurantPage() {
   const router = useRouter();
@@ -14,17 +15,29 @@ export default function NewRestaurantPage() {
     name: "",
     slug: "",
     description: "",
-    area: "Bangkok",
+    area: "Sukhumvit",
     address: "",
+    province: "Bangkok",
+    district: "",
+    subdistrict: "",
     lat: "13.7563",
     lng: "100.5018",
-    cuisine_tags: "",
+    cuisine_tags: [] as string[],
     price_tier: "2",
     image_url: "",
     open_time: "11:00",
     close_time: "22:00",
     status: "draft",
   });
+
+  const toggleCuisine = (c: string) => {
+    setForm((f) => ({
+      ...f,
+      cuisine_tags: f.cuisine_tags.includes(c)
+        ? f.cuisine_tags.filter((x) => x !== c)
+        : [...f.cuisine_tags, c],
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +49,7 @@ export default function NewRestaurantPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          cuisine_tags: form.cuisine_tags
-            ? form.cuisine_tags.split(",").map((s) => s.trim()).filter(Boolean)
-            : [],
+          cuisine_tags: form.cuisine_tags,
         }),
       });
       const data = await res.json();
@@ -92,18 +103,41 @@ export default function NewRestaurantPage() {
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           placeholder="Short description for listings"
         />
-        <Input
-          label="Area"
+        <Select
+          label="Area (neighbourhood)"
           value={form.area}
           onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
-          placeholder="e.g. Sukhumvit"
-        />
+        >
+          {AREAS.map((a) => (
+            <option key={a} value={a}>{a}</option>
+          ))}
+        </Select>
         <Input
-          label="Address"
+          label="Full address (street)"
           value={form.address}
           onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-          placeholder="Full address"
+          placeholder="e.g. 123 Sukhumvit Soi 31"
         />
+        <div className="grid grid-cols-3 gap-4">
+          <Input
+            label="Subdistrict"
+            value={form.subdistrict}
+            onChange={(e) => setForm((f) => ({ ...f, subdistrict: e.target.value }))}
+            placeholder="e.g. Khlong Toei Nuea"
+          />
+          <Input
+            label="District"
+            value={form.district}
+            onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))}
+            placeholder="e.g. Watthana"
+          />
+          <Input
+            label="Province"
+            value={form.province}
+            onChange={(e) => setForm((f) => ({ ...f, province: e.target.value }))}
+            placeholder="e.g. Bangkok"
+          />
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Latitude"
@@ -118,12 +152,25 @@ export default function NewRestaurantPage() {
             onChange={(e) => setForm((f) => ({ ...f, lng: e.target.value }))}
           />
         </div>
-        <Input
-          label="Cuisine tags (comma-separated)"
-          value={form.cuisine_tags}
-          onChange={(e) => setForm((f) => ({ ...f, cuisine_tags: e.target.value }))}
-          placeholder="e.g. Thai, Asian"
-        />
+        <div>
+          <label className="text-[13px] font-semibold text-text-secondary block mb-2">Cuisine</label>
+          <div className="flex flex-wrap gap-2">
+            {CUISINES.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => toggleCuisine(c)}
+                className={`px-3 py-1.5 rounded-[var(--radius-md)] text-sm font-medium border transition-colors ${
+                  form.cuisine_tags.includes(c)
+                    ? "bg-brand-dim border-brand text-brand-light"
+                    : "bg-transparent border-border-strong text-text-secondary hover:border-brand"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
         <Select
           label="Price tier"
           value={form.price_tier}

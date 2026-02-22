@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/apiGuard";
+import { CUISINES } from "@/data/constants";
 
 export async function POST(req: Request) {
   try {
@@ -21,19 +22,27 @@ export async function POST(req: Request) {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
 
+    const rawCuisine =
+      Array.isArray(body.cuisine_tags)
+        ? body.cuisine_tags
+        : typeof body.cuisine_tags === "string"
+          ? body.cuisine_tags.split(",").map((s: string) => s.trim()).filter(Boolean)
+          : [];
+    const cuisineSet = new Set(CUISINES);
+    const cuisine_tags = rawCuisine.filter((c: string) => cuisineSet.has(c as (typeof CUISINES)[number]));
+
     const restaurant = {
       name,
       slug: slug || null,
       description: (body.description ?? "").trim() || "Description to be added.",
       area: (body.area ?? "").trim() || "Bangkok",
       address: (body.address ?? "").trim() || "Address to be added.",
+      province: (body.province ?? "").trim() || null,
+      district: (body.district ?? "").trim() || null,
+      subdistrict: (body.subdistrict ?? "").trim() || null,
       lat: Number(body.lat) || 13.7563,
       lng: Number(body.lng) || 100.5018,
-      cuisine_tags: Array.isArray(body.cuisine_tags)
-        ? body.cuisine_tags
-        : typeof body.cuisine_tags === "string"
-          ? body.cuisine_tags.split(",").map((s: string) => s.trim()).filter(Boolean)
-          : [],
+      cuisine_tags,
       price_tier: Math.min(4, Math.max(1, Number(body.price_tier) || 2)),
       image_url: body.image_url?.trim() || null,
       open_time: body.open_time?.trim() || null,
