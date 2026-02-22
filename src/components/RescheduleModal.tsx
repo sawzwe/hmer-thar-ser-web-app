@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Booking, Slot } from "@/types";
 import { getSlotsForDate } from "@/lib/slots";
 import { useBookingStore } from "@/stores/bookingStore";
-import { restaurants } from "@/data/seed";
+import { useRestaurantStore } from "@/stores/restaurantStore";
 import { format, addDays } from "date-fns";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,13 @@ interface RescheduleModalProps { booking: Booking; onClose: () => void; onSucces
 
 export function RescheduleModal({ booking, onClose, onSuccess }: RescheduleModalProps) {
   const reschedule = useBookingStore((s) => s.reschedule);
+  const restaurants = useRestaurantStore((s) => s.restaurants);
+  const restaurant = restaurants.find((r) => r.id === booking.restaurantId);
   const [date, setDate] = useState(booking.date);
   const [time, setTime] = useState("");
   const [slots, setSlots] = useState<Slot[]>([]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const restaurant = restaurants.find((r) => r.id === booking.restaurantId);
 
   useEffect(() => { setSlots(getSlotsForDate(booking.restaurantId, date)); setTime(""); }, [date, booking.restaurantId]);
 

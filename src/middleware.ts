@@ -26,7 +26,14 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh session — do not remove this call
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const path = request.nextUrl.pathname;
+  if ((path.startsWith("/vendor") || path.startsWith("/admin")) && !user) {
+    return NextResponse.redirect(
+      new URL(`/sign-in?next=${encodeURIComponent(path)}`, request.url)
+    );
+  }
 
   return supabaseResponse;
 }

@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
+import { useRouter } from "next/navigation";
+import {
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/authStore";
@@ -9,12 +15,29 @@ import { cn } from "@/lib/utils";
 
 type AuthMode = "sign-in" | "sign-up";
 
+function formatAuthError(code?: string, fallback?: string): string {
+  if (code === "email_address_invalid") {
+    return "That email format isn't accepted. Try one like you@example.com or yourname@gmail.com.";
+  }
+  if (code === "over_email_send_rate_limit") {
+    return 'Too many sign-up emails sent. Wait an hour or, in development, turn off "Confirm email" in Supabase → Authentication.';
+  }
+  return fallback ?? "Something went wrong.";
+}
+
 interface AuthModalProps {
   onClose: () => void;
   defaultMode?: AuthMode;
+  /** When set, redirect here after successful sign-in (e.g. from /sign-in?next=/vendor) */
+  redirectTo?: string;
 }
 
-export function AuthModal({ onClose, defaultMode = "sign-in" }: AuthModalProps) {
+export function AuthModal({
+  onClose,
+  defaultMode = "sign-in",
+  redirectTo,
+}: AuthModalProps) {
+  const router = useRouter();
   const signIn = useAuthStore((s) => s.signIn);
   const signUp = useAuthStore((s) => s.signUp);
   const loading = useAuthStore((s) => s.loading);
@@ -34,11 +57,13 @@ export function AuthModal({ onClose, defaultMode = "sign-in" }: AuthModalProps) 
     if (mode === "sign-in") {
       const result = await signIn(email, password);
       if (result.error) {
-        setError(result.code === "email_address_invalid"
-          ? "That email format isn't accepted. Try one like you@example.com or yourname@gmail.com."
-          : result.error);
+        setError(formatAuthError(result.code, result.error));
       } else {
-        onClose();
+        if (redirectTo) {
+          router.push(redirectTo);
+        } else {
+          onClose();
+        }
       }
     } else {
       if (!name.trim()) {
@@ -47,12 +72,10 @@ export function AuthModal({ onClose, defaultMode = "sign-in" }: AuthModalProps) 
       }
       const result = await signUp(email, password, name);
       if (result.error) {
-        setError(result.code === "email_address_invalid"
-          ? "That email format isn't accepted. Try one like you@example.com or yourname@gmail.com."
-          : result.error);
+        setError(formatAuthError(result.code, result.error));
       } else {
         setSuccess(
-          "Check your email for a confirmation link. You can close this window."
+          "Check your email for a confirmation link. You can close this window.",
         );
       }
     }
@@ -84,7 +107,7 @@ export function AuthModal({ onClose, defaultMode = "sign-in" }: AuthModalProps) 
                 "flex-1 py-2 rounded-[var(--radius-sm)] text-[13px] font-semibold transition-all duration-[var(--dur-fast)] cursor-pointer",
                 mode === m
                   ? "bg-brand text-white shadow-[var(--shadow-sm)]"
-                  : "text-text-muted hover:text-text-secondary"
+                  : "text-text-muted hover:text-text-secondary",
               )}
             >
               {m === "sign-in" ? "Sign in" : "Sign up"}
@@ -126,10 +149,14 @@ export function AuthModal({ onClose, defaultMode = "sign-in" }: AuthModalProps) 
               <Input
                 label="Password"
                 type="password"
-                placeholder={mode === "sign-up" ? "At least 8 characters" : "Your password"}
+                placeholder={
+                  mode === "sign-up" ? "At least 8 characters" : "Your password"
+                }
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+                autoComplete={
+                  mode === "sign-in" ? "current-password" : "new-password"
+                }
                 required
                 minLength={mode === "sign-up" ? 8 : undefined}
               />
@@ -156,12 +183,17 @@ export function AuthModal({ onClose, defaultMode = "sign-in" }: AuthModalProps) 
 
         {!success && (
           <ModalFooter className="flex-col gap-3">
-            <Button type="submit" variant="primary" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full"
+              disabled={loading}
+            >
               {loading
                 ? "Please wait…"
                 : mode === "sign-in"
-                ? "Sign in"
-                : "Create account"}
+                  ? "Sign in"
+                  : "Create account"}
             </Button>
 
             <p className="text-[12px] text-text-muted text-center">

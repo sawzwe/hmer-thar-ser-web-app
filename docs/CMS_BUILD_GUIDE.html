@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hmar Thar Sar — CMS Build Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:#E8421A; --brand-h:#D63A14; --brand-l:#FF6B47;
+  --brand-dim:rgba(232,66,26,.10); --brand-bdr:rgba(232,66,26,.25);
+  --bg:#0A0A08; --surface:#111110; --card:#161614; --card2:#1C1C19;
+  --border:rgba(255,255,255,.07); --border-s:rgba(255,255,255,.11);
+  --text-1:#F5F4EF; --text-2:#9E9D95; --text-3:#5A5950;
+  --gold:#D4A853; --success:#3DAA6E; --success-dim:rgba(61,170,110,.12);
+  --warn:#E09B2D; --warn-dim:rgba(224,155,45,.12);
+  --info:#4A9FD4; --info-dim:rgba(74,159,212,.12);
+  --purple:#9B7CF5; --purple-dim:rgba(155,124,245,.12);
+  --font-d:'Playfair Display',Georgia,serif;
+  --font-b:'DM Sans',-apple-system,sans-serif;
+  --font-m:'JetBrains Mono','Fira Code',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text-1);font-family:var(--font-b);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,8,.93);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;padding:0 32px;height:52px;margin:0 -32px;flex-wrap:wrap}
+.nav-brand{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--text-1);margin-right:6px}
+.nav-sep{width:3px;height:3px;border-radius:50%;background:var(--border-s)}
+.nav-link{font-size:12px;color:var(--text-3);padding:4px 10px;border-radius:20px;text-decoration:none;transition:color .15s;white-space:nowrap}
+.nav-link:hover{color:var(--text-2)}
+
+.page{max-width:1080px;margin:0 auto;padding:0 32px 100px}
+
+/* HERO */
+.hero{padding:52px 0 44px;border-bottom:1px solid var(--border)}
+.hero-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:20px;border:1px solid var(--border-s);background:rgba(255,255,255,.03);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:18px}
+.chip-dot{width:5px;height:5px;border-radius:50%;background:var(--brand);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-family:var(--font-d);font-size:clamp(28px,4.5vw,48px);font-weight:700;letter-spacing:-1.5px;line-height:1.1;margin-bottom:12px}
+.hero h1 em{font-style:italic;color:var(--brand-l)}
+.hero-sub{font-size:14px;color:var(--text-2);max-width:600px;line-height:1.7;margin-bottom:22px}
+.hero-tags{display:flex;gap:8px;flex-wrap:wrap}
+.htag{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid}
+.ht-brand{background:var(--brand-dim);color:var(--brand-l);border-color:var(--brand-bdr)}
+.ht-green{background:var(--success-dim);color:var(--success);border-color:rgba(61,170,110,.25)}
+.ht-purple{background:var(--purple-dim);color:var(--purple);border-color:rgba(155,124,245,.25)}
+.ht-gold{background:rgba(212,168,83,.1);color:var(--gold);border-color:rgba(212,168,83,.25)}
+
+/* OVERVIEW TABLE */
+.overview{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:40px}
+.ov-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.ov-icon{font-size:24px;margin-bottom:10px}
+.ov-title{font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:6px}
+.ov-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+.ov-list li{font-size:12px;color:var(--text-2);display:flex;align-items:flex-start;gap:7px}
+.ov-list li::before{content:'→';color:var(--text-3);flex-shrink:0;margin-top:1px}
+
+/* PHASE HEADERS */
+.phase-header{margin:52px 0 28px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.phase-label{font-size:11px;font-weight:700;color:var(--brand-l);letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px}
+.phase-title{font-family:var(--font-d);font-size:clamp(20px,3vw,30px);font-weight:700;letter-spacing:-.7px;color:var(--text-1);margin-bottom:6px}
+.phase-desc{font-size:13px;color:var(--text-2);max-width:620px;line-height:1.65}
+
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:flex;gap:20px;padding-bottom:36px;position:relative}
+.step:not(:last-child)::before{content:'';position:absolute;left:17px;top:40px;bottom:0;width:1px;background:var(--border-s)}
+.step-num{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;z-index:1;flex-shrink:0}
+.sn-brand{background:var(--brand-dim);color:var(--brand-l);border:1.5px solid var(--brand-bdr)}
+.sn-green{background:var(--success-dim);color:var(--success);border:1.5px solid rgba(61,170,110,.3)}
+.sn-purple{background:var(--purple-dim);color:var(--purple);border:1.5px solid rgba(155,124,245,.3)}
+.sn-gold{background:rgba(212,168,83,.1);color:var(--gold);border:1.5px solid rgba(212,168,83,.3)}
+
+.step-body{flex:1;padding-top:4px}
+.step-title{font-size:15px;font-weight:700;color:var(--text-1);margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.step-desc{font-size:13px;color:var(--text-2);line-height:1.65;margin-bottom:14px;max-width:700px}
+
+/* CODE */
+.code-wrap{margin:0 0 14px}
+.code-label{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.code-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.code{background:rgba(0,0,0,.55);border:1px solid var(--border-s);border-radius:10px;padding:16px 20px;font-family:var(--font-m);font-size:12px;line-height:1.85;color:#A3E635;overflow-x:auto;tab-size:2;white-space:pre}
+.cm{color:#5A5950} .kw{color:#67E8F9} .st{color:#86EFAC}
+.ty{color:#FCD34D} .nu{color:#FCA5A5} .op{color:#E879F9} .fn{color:#A78BFA}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.b-brand{background:var(--brand-dim);color:var(--brand-l);border:1px solid var(--brand-bdr)}
+.b-green{background:var(--success-dim);color:var(--success);border:1px solid rgba(61,170,110,.25)}
+.b-purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(155,124,245,.25)}
+.b-gold{background:rgba(212,168,83,.1);color:var(--gold);border:1px solid rgba(212,168,83,.2)}
+.b-gray{background:rgba(255,255,255,.05);color:var(--text-2);border:1px solid var(--border-s)}
+.b-warn{background:var(--warn-dim);color:var(--warn);border:1px solid rgba(224,155,45,.2)}
+.b-info{background:var(--info-dim);color:var(--info);border:1px solid rgba(74,159,212,.2)}
+
+/* ALERT */
+.alert{border-radius:10px;padding:13px 16px;margin:0 0 14px;display:flex;align-items:flex-start;gap:10px}
+.alert-brand{background:var(--brand-dim);border:1px solid var(--brand-bdr)}
+.alert-green{background:var(--success-dim);border:1px solid rgba(61,170,110,.25)}
+.alert-warn{background:var(--warn-dim);border:1px solid rgba(224,155,45,.25)}
+.alert-purple{background:var(--purple-dim);border:1px solid rgba(155,124,245,.25)}
+.alert-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+.alert-body{font-size:12.5px;color:var(--text-2);line-height:1.65}
+.alert-body strong{color:var(--text-1)}
+
+/* FILE TREE */
+.tree{background:rgba(0,0,0,.4);border:1px solid var(--border-s);border-radius:10px;padding:16px 20px;font-family:var(--font-m);font-size:12px;line-height:1.9;color:var(--text-2);overflow-x:auto;margin-bottom:14px}
+.tree .new{color:var(--brand-l);font-weight:700}
+.tree .cm{color:var(--text-3)}
+
+/* CHECKLIST */
+.checklist{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.check-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-2);line-height:1.55}
+.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-s);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:10px}
+.check-box.done{background:var(--success-dim);border-color:rgba(61,170,110,.4);color:var(--success)}
+
+/* MINI TABLE */
+.mini-table{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.mini-table table{width:100%;border-collapse:collapse}
+.mini-table th{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;padding:8px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+.mini-table td{padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-2);vertical-align:middle}
+.mini-table tr:last-child td{border-bottom:none}
+.mini-table td code{font-family:var(--font-m);font-size:11px;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;color:var(--brand-l)}
+.mini-table td strong{color:var(--text-1)}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:24px 0}
+
+/* CURSOR PROMPT BOX */
+.cursor-box{background:rgba(155,124,245,.08);border:1px solid rgba(155,124,245,.25);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.cursor-box-title{font-size:11px;font-weight:700;color:var(--purple);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.cursor-box-title::after{content:'';flex:1;height:1px;background:rgba(155,124,245,.2)}
+.cursor-prompt{font-family:var(--font-m);font-size:11.5px;color:var(--text-2);line-height:1.75;white-space:pre-wrap}
+
+/* SUB-STEPS */
+.sub-steps{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.sub-step{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.sub-step-title{font-size:12px;font-weight:700;color:var(--text-1);margin-bottom:4px}
+.sub-step-desc{font-size:12px;color:var(--text-2);line-height:1.6}
+
+/* SIDEBAR CARD (inline warning/tip) */
+.tip{background:rgba(212,168,83,.07);border:1px solid rgba(212,168,83,.2);border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:var(--text-2);line-height:1.6}
+.tip strong{color:var(--gold)}
+
+[id]{scroll-margin-top:68px}
+</style>
+</head>
+<body>
+<nav>
+  <span class="nav-brand">Hmar Thar Sar</span>
+  <span class="nav-sep"></span>
+  <a class="nav-link" href="#overview">Overview</a>
+  <a class="nav-link" href="#phase1">Phase 1 · Routes</a>
+  <a class="nav-link" href="#phase2">Phase 2 · Vendor CMS</a>
+  <a class="nav-link" href="#phase3">Phase 3 · Admin</a>
+  <a class="nav-link" href="#phase4">Phase 4 · API Guards</a>
+  <a class="nav-link" href="#phase5">Phase 5 · Polish</a>
+  <a class="nav-link" href="#cursor">Cursor Prompts</a>
+</nav>
+
+<div class="page">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-chip"><span class="chip-dot"></span>Step-by-Step Build Guide</div>
+  <h1>Building the Vendor CMS<br>&amp; <em>Admin Panel</em></h1>
+  <p class="hero-sub">Auth, UserFactory, and RBAC are already in place. This guide picks up from there — routing, UI, API guards, and the Cursor prompts to build each piece. Follow in order; each phase is independently shippable.</p>
+  <div class="hero-tags">
+    <span class="htag ht-brand">5 Phases</span>
+    <span class="htag ht-green">Vendor CMS</span>
+    <span class="htag ht-purple">Admin Panel</span>
+    <span class="htag ht-gold">API Guards</span>
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<div id="overview" style="padding:40px 0 0">
+  <div style="font-size:11px;font-weight:700;color:var(--brand-l);letter-spacing:.09em;text-transform:uppercase;margin-bottom:8px">What you're building</div>
+  <div class="overview">
+    <div class="ov-card">
+      <div class="ov-icon">🏪</div>
+      <div class="ov-title">Vendor CMS <span class="badge b-green" style="font-size:10px">user.type === 'vendor'</span></div>
+      <ul class="ov-list">
+        <li>Dashboard: my restaurants at a glance</li>
+        <li>Restaurant editor: info, hours, transit, photos</li>
+        <li>Deals manager: create / pause / delete deals</li>
+        <li>Slot editor: set capacity by date + time</li>
+        <li>Menu manager: categories + items</li>
+        <li>Bookings view: upcoming, filter, mark complete</li>
+        <li>Analytics: views, bookings, revenue summary</li>
+      </ul>
+    </div>
+    <div class="ov-card">
+      <div class="ov-icon">⚙️</div>
+      <div class="ov-title">Admin Panel <span class="badge b-purple" style="font-size:10px">user.type === 'admin'</span></div>
+      <ul class="ov-list">
+        <li>Users list: search, view, suspend</li>
+        <li>Vendor verification: approve / reject claims</li>
+        <li>Restaurant moderation: approve, pause, archive</li>
+        <li>All bookings: cross-restaurant view</li>
+        <li>Review moderation: flag / delete</li>
+        <li>RBAC manager: assign roles to users</li>
+        <li>Platform analytics dashboard</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- File structure before we start -->
+  <div class="code-label" style="margin-bottom:8px">Target file structure (new files highlighted)</div>
+  <div class="tree">src/app/
+├── (vendor)/                         <span class="new">← NEW route group</span>
+│   ├── layout.tsx                    <span class="new">← vendor guard + shell</span>
+│   └── vendor/
+│       ├── page.tsx                  <span class="new">← /vendor  dashboard</span>
+│       ├── restaurants/
+│       │   ├── page.tsx              <span class="new">← my restaurants list</span>
+│       │   └── [id]/
+│       │       ├── page.tsx          <span class="new">← restaurant overview</span>
+│       │       ├── deals/page.tsx    <span class="new">← deals CRUD</span>
+│       │       ├── slots/page.tsx    <span class="new">← slot editor</span>
+│       │       ├── menu/page.tsx     <span class="new">← menu editor</span>
+│       │       └── bookings/page.tsx <span class="new">← bookings for this venue</span>
+│       └── claim/page.tsx            <span class="new">← claim a restaurant</span>
+│
+├── (admin)/                          <span class="new">← NEW route group</span>
+│   ├── layout.tsx                    <span class="new">← admin guard + shell</span>
+│   └── admin/
+│       ├── page.tsx                  <span class="new">← /admin dashboard</span>
+│       ├── users/page.tsx            <span class="new">← user management</span>
+│       ├── vendors/page.tsx          <span class="new">← verify vendors</span>
+│       ├── restaurants/page.tsx     <span class="new">← moderate restaurants</span>
+│       ├── bookings/page.tsx         <span class="new">← all bookings</span>
+│       └── reviews/page.tsx         <span class="new">← moderate reviews</span>
+│
+└── api/
+    ├── vendor/                       <span class="new">← vendor API routes</span>
+    │   ├── restaurants/route.ts
+    │   ├── restaurants/[id]/route.ts
+    │   ├── restaurants/[id]/deals/route.ts
+    │   ├── restaurants/[id]/slots/route.ts
+    │   └── restaurants/[id]/bookings/route.ts
+    └── admin/                        <span class="new">← admin API routes</span>
+        ├── users/route.ts
+        ├── vendors/[id]/verify/route.ts
+        └── restaurants/[id]/status/route.ts
+
+src/components/
+├── vendor/                           <span class="new">← vendor UI components</span>
+│   ├── VendorShell.tsx
+│   ├── RestaurantCard.tsx
+│   ├── DealForm.tsx
+│   ├── SlotEditor.tsx
+│   └── BookingsTable.tsx
+└── admin/                            <span class="new">← admin UI components</span>
+    ├── AdminShell.tsx
+    ├── UserTable.tsx
+    └── VendorVerifyCard.tsx</div>
+</div>
+
+<!-- Full content continues below - see original for phases 1-5 and cursor prompts -->
+<div class="phase-header" id="phase1">
+  <div class="phase-label">Phase 1 · Foundation</div>
+  <h2 class="phase-title">Route Groups &amp; Auth Guards</h2>
+  <p class="phase-desc">Create (vendor) and (admin) layout.tsx with UserFactory.fromSupabase, redirect if wrong type. Build VendorShell and AdminShell sidebars.</p>
+</div>
+
+<div class="phase-header" id="phase2">
+  <div class="phase-label">Phase 2 · Vendor CMS</div>
+  <h2 class="phase-title">Vendor Dashboard Pages</h2>
+  <p class="phase-desc">Dashboard, restaurants list/editor, deals, slots, bookings, claim flow. All scoped to user.restaurantIds. Always call user.ownsRestaurant(params.id) on [id] pages.</p>
+</div>
+
+<div class="phase-header" id="phase3">
+  <div class="phase-label">Phase 3 · Admin Panel</div>
+  <h2 class="phase-title">Admin Dashboard Pages</h2>
+  <p class="phase-desc">Overview, vendors (verify), users, restaurants, bookings, reviews. Gate destructive actions with user.isSuperAdmin().</p>
+</div>
+
+<div class="phase-header" id="phase4">
+  <div class="phase-label">Phase 4 · Security</div>
+  <h2 class="phase-title">API Route Guards</h2>
+  <p class="phase-desc">requireVendorOwner(restaurantId) and requireAdmin(). Override restaurant_id from URL, never from body. RLS policies for vendor-scoped tables.</p>
+</div>
+
+<div class="phase-header" id="phase5">
+  <div class="phase-label">Phase 5 · Polish</div>
+  <h2 class="phase-title">Navigation &amp; UX</h2>
+  <p class="phase-desc">Add Vendor Dashboard and Admin Panel links to AppShell user menu. Middleware redirect for /vendor and /admin when unauthenticated.</p>
+</div>
+
+<div class="phase-header" id="cursor">
+  <div class="phase-label">Cursor Agent Prompts</div>
+  <h2 class="phase-title">5 Copy-paste Prompts</h2>
+  <p class="phase-desc">Run in order: (1) Route groups + shells, (2) Vendor pages, (3) Admin pages, (4) API routes, (5) RLS + nav + middleware.</p>
+</div>
+
+<div style="padding:40px 0 20px;border-top:1px solid var(--border);margin-top:48px">
+  <div style="font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--text-1)">Hmar Thar Sar · CMS Build Guide v1.0</div>
+  <div style="font-size:11px;color:var(--text-3)">18 steps · 5 Cursor prompts · Vendor CMS + Admin Panel</div>
+</div>
+
+</div>
+</body>
+</html>

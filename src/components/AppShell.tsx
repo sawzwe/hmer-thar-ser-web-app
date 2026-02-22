@@ -9,7 +9,6 @@ import { useReviewStore } from "@/stores/reviewStore";
 import { useAuthStore } from "@/stores/authStore";
 import { initializeSlotsIfNeeded } from "@/lib/slots";
 import { runMigrations } from "@/lib/storage";
-import { restaurants as seedRestaurants } from "@/data/seed";
 import { Toast } from "./Toast";
 import { AuthModal } from "./AuthModal";
 import { cn } from "@/lib/utils";
@@ -30,10 +29,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     runMigrations();
-    initializeSlotsIfNeeded(seedRestaurants);
-    loadRestaurants();
     loadAllReviews();
     initialize();
+    loadRestaurants().then(() => {
+      const { restaurants } = useRestaurantStore.getState();
+      if (restaurants.length > 0) {
+        initializeSlotsIfNeeded(
+          restaurants.map((r) => ({ id: r.id, openTime: r.openTime, closeTime: r.closeTime }))
+        );
+      }
+    });
   }, [loadRestaurants, loadAllReviews, initialize]);
 
   const navItems = [
@@ -43,6 +48,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   ];
 
   const isChat = pathname === "/chat";
+  const isCms = pathname?.startsWith("/vendor") || pathname?.startsWith("/admin");
+
+  if (isCms) {
+    return <>{children}</>;
+  }
 
   return (
     <div className={cn("min-h-screen flex flex-col bg-bg", isChat && "h-screen overflow-hidden")}>
@@ -100,6 +110,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <span className="inline-block mt-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-dim text-brand-light border border-brand-border">
                         {user.type}
                       </span>
+                      {user.type === "vendor" && (
+                        <Link
+                          href="/vendor"
+                          className="block mt-2 text-[12px] font-medium text-brand-light hover:underline"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          🏪 Vendor Dashboard
+                        </Link>
+                      )}
+                      {user.type === "admin" && (
+                        <Link
+                          href="/admin"
+                          className="block mt-2 text-[12px] font-medium text-[#9B7CF5] hover:underline"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          ⚙️ Admin Panel
+                        </Link>
+                      )}
+                      {user.type === "customer" && (
+                        <Link
+                          href="/claim"
+                          className="block mt-2 text-[12px] font-medium text-brand-light hover:underline"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          🏪 Claim your restaurant
+                        </Link>
+                      )}
                     </div>
                     <button
                       onClick={() => { setUserMenuOpen(false); signOut(); }}
