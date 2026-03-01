@@ -17,9 +17,10 @@ interface ClaimRestaurantFormProps {
 }
 
 export function ClaimRestaurantForm({
-  userId,
+  userId: _userId,
   existingRestaurants,
 }: ClaimRestaurantFormProps) {
+  void _userId;
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

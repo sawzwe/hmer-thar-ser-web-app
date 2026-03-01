@@ -15,10 +15,17 @@ export function TransitSection({ transitNearby, restaurantGeo }: TransitSectionP
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!navigator.geolocation) { setGeoStatus("denied"); return; }
-    setGeoStatus("loading");
+    if (!navigator.geolocation) {
+      queueMicrotask(() => setGeoStatus("denied"));
+      return;
+    }
+    queueMicrotask(() => setGeoStatus("loading"));
     navigator.geolocation.getCurrentPosition(
-      (pos) => { const g = { lat: pos.coords.latitude, lng: pos.coords.longitude }; setDistanceKm(haversineDistance(g, restaurantGeo)); setGeoStatus("granted"); },
+      (pos) => {
+        const g = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setDistanceKm(haversineDistance(g, restaurantGeo));
+        setGeoStatus("granted");
+      },
       () => setGeoStatus("denied"),
       { enableHighAccuracy: false, timeout: 8000 }
     );

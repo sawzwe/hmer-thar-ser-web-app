@@ -31,7 +31,8 @@ export async function POST(
     const { id } = await params;
     const { supabase } = await requireVendorOwner(id);
     const body = await req.json();
-    const { restaurant_id: _ri, ...rest } = body;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- intentionally excluding restaurant_id
+    const { restaurant_id, ...rest } = body;
     const { data, error } = await supabase
       .from("deals")
       .insert({ ...rest, restaurant_id: id })

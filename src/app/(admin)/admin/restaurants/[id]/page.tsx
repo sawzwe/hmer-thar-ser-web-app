@@ -73,28 +73,28 @@ export default function AdminRestaurantEditPage() {
   });
 
   useEffect(() => {
-    if (restaurant) {
-      setForm({
-        name: restaurant.name ?? "",
-        slug: restaurant.slug ?? "",
-        description: restaurant.description ?? "",
-        area: restaurant.area ?? "Sukhumvit",
-        address: restaurant.address ?? "",
-        province: restaurant.province ?? "Bangkok",
-        district: restaurant.district ?? "",
-        subdistrict: restaurant.subdistrict ?? "",
-        lat: String(restaurant.lat ?? "13.7563"),
-        lng: String(restaurant.lng ?? "100.5018"),
-        cuisine_tags: Array.isArray(restaurant.cuisine_tags)
-          ? restaurant.cuisine_tags
-          : [],
-        price_tier: String(restaurant.price_tier ?? 2),
-        image_url: restaurant.image_url ?? "",
-        open_time: restaurant.open_time?.slice(0, 5) ?? "11:00",
-        close_time: restaurant.close_time?.slice(0, 5) ?? "22:00",
-        status: restaurant.status ?? "active",
-      });
-    }
+    if (!restaurant) return;
+    const next = {
+      name: restaurant.name ?? "",
+      slug: restaurant.slug ?? "",
+      description: restaurant.description ?? "",
+      area: restaurant.area ?? "Sukhumvit",
+      address: restaurant.address ?? "",
+      province: restaurant.province ?? "Bangkok",
+      district: restaurant.district ?? "",
+      subdistrict: restaurant.subdistrict ?? "",
+      lat: String(restaurant.lat ?? "13.7563"),
+      lng: String(restaurant.lng ?? "100.5018"),
+      cuisine_tags: Array.isArray(restaurant.cuisine_tags)
+        ? restaurant.cuisine_tags
+        : [],
+      price_tier: String(restaurant.price_tier ?? 2),
+      image_url: restaurant.image_url ?? "",
+      open_time: restaurant.open_time?.slice(0, 5) ?? "11:00",
+      close_time: restaurant.close_time?.slice(0, 5) ?? "22:00",
+      status: restaurant.status ?? "active",
+    };
+    queueMicrotask(() => setForm(next));
   }, [restaurant]);
 
   const mutation = useMutation({

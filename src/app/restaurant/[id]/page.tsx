@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, useMemo, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Restaurant, Deal, Slot } from "@/types";
+import { Restaurant, Deal } from "@/types";
 import { fetchRestaurantById } from "@/lib/mockApi/restaurants";
 import { getSlotsForDate } from "@/lib/slots";
 import { BookingModal } from "@/components/BookingModal";
@@ -36,11 +36,14 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
   const [activeTab, setActiveTab] = useState<TabKey>("about");
   const [previewDate, setPreviewDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [previewPartySize, setPreviewPartySize] = useState(2);
-  const [previewSlots, setPreviewSlots] = useState<Slot[]>([]);
   const { getAverageRating, loadAllReviews } = useReviewStore();
 
+  const previewSlots = useMemo(
+    () => (restaurant ? getSlotsForDate(restaurant.id, previewDate) : []),
+    [restaurant, previewDate]
+  );
+
   useEffect(() => { fetchRestaurantById(id).then((r) => { setRestaurant(r); setLoading(false); }); loadAllReviews(); }, [id, loadAllReviews]);
-  useEffect(() => { if (restaurant) setPreviewSlots(getSlotsForDate(restaurant.id, previewDate)); }, [restaurant, previewDate]);
 
   if (loading) {
     return (
