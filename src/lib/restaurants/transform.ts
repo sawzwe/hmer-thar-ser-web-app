@@ -19,6 +19,20 @@ type DbRestaurant = {
   opening_hours?: unknown;
   transit_nearby?: unknown;
   status?: string;
+  phone?: string | null;
+  website?: string | null;
+  email?: string | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  postal_code?: string | null;
+  logo_url?: string | null;
+  street_view_url?: string | null;
+  restaurant_type?: string | null;
+  attributes?: Record<string, Record<string, boolean>> | null;
+  google_place_id?: string | null;
+  google_maps_url?: string | null;
+  google_rating?: number | null;
+  google_review_count?: number | null;
 };
 
 type DbDeal = {
@@ -89,6 +103,20 @@ type RestaurantRow = {
   opening_hours?: unknown;
   transit_nearby?: unknown;
   status?: string;
+  phone?: string | null;
+  website?: string | null;
+  email?: string | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  postal_code?: string | null;
+  logo_url?: string | null;
+  street_view_url?: string | null;
+  restaurant_type?: string | null;
+  attributes?: Record<string, Record<string, boolean>> | null;
+  google_place_id?: string | null;
+  google_maps_url?: string | null;
+  google_rating?: number | null;
+  google_review_count?: number | null;
 };
 
 function buildFullAddress(row: {
@@ -145,5 +173,19 @@ export function transformDbRestaurant(
     openingHours,
     openTime,
     closeTime,
+    phone: row.phone ?? undefined,
+    website: row.website ?? undefined,
+    email: row.email ?? undefined,
+    facebookUrl: row.facebook_url ?? undefined,
+    instagramUrl: row.instagram_url ?? undefined,
+    postalCode: row.postal_code ?? undefined,
+    logoUrl: row.logo_url ?? undefined,
+    streetViewUrl: row.street_view_url ?? undefined,
+    restaurantType: row.restaurant_type ?? undefined,
+    attributes: row.attributes ?? undefined,
+    googlePlaceId: row.google_place_id ?? undefined,
+    googleMapsUrl: row.google_maps_url ?? undefined,
+    googleRating: row.google_rating != null ? Number(row.google_rating) : undefined,
+    googleReviewCount: row.google_review_count != null ? Number(row.google_review_count) : undefined,
   };
 }

@@ -82,6 +82,15 @@ export async function PATCH(
         ? body.status
         : "active",
       updated_at: new Date().toISOString(),
+      phone: body.phone?.trim() || null,
+      website: body.website?.trim() || null,
+      email: body.email?.trim() || null,
+      facebook_url: body.facebook_url?.trim() || null,
+      instagram_url: body.instagram_url?.trim() || null,
+      postal_code: body.postal_code?.trim() || null,
+      logo_url: body.logo_url?.trim() || null,
+      street_view_url: body.street_view_url?.trim() || null,
+      restaurant_type: body.restaurant_type?.trim() || null,
     };
 
     const { data, error } = await supabase

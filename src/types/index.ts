@@ -60,6 +60,20 @@ export interface Restaurant {
   openingHours: DayHours[];
   openTime: string;
   closeTime: string;
+  phone?: string;
+  website?: string;
+  email?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  postalCode?: string;
+  logoUrl?: string;
+  streetViewUrl?: string;
+  restaurantType?: string;
+  attributes?: Record<string, Record<string, boolean>>;
+  googlePlaceId?: string;
+  googleMapsUrl?: string;
+  googleRating?: number;
+  googleReviewCount?: number;
 }
 
 export interface Slot {

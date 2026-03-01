@@ -35,6 +35,15 @@ export default function NewRestaurantPage() {
     open_time: "11:00",
     close_time: "22:00",
     status: "draft",
+    phone: "",
+    website: "",
+    email: "",
+    facebook_url: "",
+    instagram_url: "",
+    postal_code: "",
+    logo_url: "",
+    street_view_url: "",
+    restaurant_type: "",
   });
 
   const toggleCuisine = (c: string) => {
@@ -252,6 +261,95 @@ export default function NewRestaurantPage() {
             }
           />
         </div>
+        {/* Contact */}
+        <fieldset className="border border-border rounded-[var(--radius-lg)] p-4 space-y-4">
+          <legend className="text-xs font-semibold text-text-muted uppercase px-2">
+            Contact
+          </legend>
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Phone"
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+              placeholder="+66 2 123 4567"
+            />
+            <Input
+              label="Email"
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              placeholder="info@restaurant.com"
+            />
+          </div>
+          <Input
+            label="Website"
+            type="url"
+            value={form.website}
+            onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
+            placeholder="https://restaurant.com"
+          />
+        </fieldset>
+
+        {/* Social */}
+        <fieldset className="border border-border rounded-[var(--radius-lg)] p-4 space-y-4">
+          <legend className="text-xs font-semibold text-text-muted uppercase px-2">
+            Social
+          </legend>
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Facebook URL"
+              type="url"
+              value={form.facebook_url}
+              onChange={(e) => setForm((f) => ({ ...f, facebook_url: e.target.value }))}
+              placeholder="https://facebook.com/..."
+            />
+            <Input
+              label="Instagram URL"
+              type="url"
+              value={form.instagram_url}
+              onChange={(e) => setForm((f) => ({ ...f, instagram_url: e.target.value }))}
+              placeholder="https://instagram.com/..."
+            />
+          </div>
+        </fieldset>
+
+        {/* Media */}
+        <fieldset className="border border-border rounded-[var(--radius-lg)] p-4 space-y-4">
+          <legend className="text-xs font-semibold text-text-muted uppercase px-2">
+            Media
+          </legend>
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Logo URL"
+              type="url"
+              value={form.logo_url}
+              onChange={(e) => setForm((f) => ({ ...f, logo_url: e.target.value }))}
+              placeholder="https://..."
+            />
+            <Input
+              label="Street View URL"
+              type="url"
+              value={form.street_view_url}
+              onChange={(e) => setForm((f) => ({ ...f, street_view_url: e.target.value }))}
+              placeholder="https://..."
+            />
+          </div>
+        </fieldset>
+
+        {/* Classification */}
+        <Input
+          label="Restaurant Type"
+          value={form.restaurant_type}
+          onChange={(e) => setForm((f) => ({ ...f, restaurant_type: e.target.value }))}
+          placeholder="e.g. Burmese restaurant"
+        />
+        <Input
+          label="Postal Code"
+          value={form.postal_code}
+          onChange={(e) => setForm((f) => ({ ...f, postal_code: e.target.value }))}
+          placeholder="10110"
+        />
+
         <Select
           label="Status"
           value={form.status}
