@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { Action, IUser, Permission, Resource } from "./types";
 import { AdminUser } from "./users/AdminUser";
 import { CustomerUser } from "./users/CustomerUser";
@@ -7,7 +7,6 @@ import { VendorUser } from "./users/VendorUser";
 
 interface RolePermissionRow {
   scope: string | null;
-  // Supabase returns nested single-row joins as objects, but TS infers them as arrays
   permissions:
     | { action: string; resource: string }
     | { action: string; resource: string }[]
@@ -30,25 +29,27 @@ function generateGuestId(): string {
 export class UserFactory {
   /**
    * Resolve the current user from a Supabase client instance.
-   * Returns GuestUser if unauthenticated, otherwise fetches roles
-   * and profile data and creates the appropriate typed user.
+   * Calls getUser() to verify the token server-side.
+   * Only use this outside of onAuthStateChange callbacks.
    */
   static async fromSupabase(supabase: SupabaseClient): Promise<IUser> {
-    let user: {
-      id: string;
-      email?: string | null;
-      user_metadata?: Record<string, unknown>;
-    } | null = null;
+    let user: User | null = null;
     try {
       const { data } = await supabase.auth.getUser();
       user = data?.user ?? null;
     } catch {
-      // Lock timeout or other auth error — treat as guest so the app still loads
       return UserFactory.createGuest();
     }
 
     if (!user) return UserFactory.createGuest();
+    return UserFactory.resolveUser(supabase, user);
+  }
 
+  /**
+   * Build a typed user from an already-known Supabase User object.
+   * Safe to call inside onAuthStateChange (no lock re-entry).
+   */
+  static async resolveUser(supabase: SupabaseClient, user: User): Promise<IUser> {
     const name =
       (user.user_metadata?.name as string | undefined) ||
       user.email?.split("@")[0] ||
@@ -56,7 +57,6 @@ export class UserFactory {
 
     const locale = (user.user_metadata?.locale as string | undefined) || "en";
 
-    // Fetch roles + permissions in a single join query
     const { data: userRolesData } = await supabase
       .from("user_roles")
       .select(
@@ -156,7 +156,6 @@ export class UserFactory {
     });
   }
 
-  /** Create an anonymous guest — no DB query needed */
   static createGuest(token?: string): GuestUser {
     const guestToken = token ?? generateGuestId();
     return new GuestUser({
