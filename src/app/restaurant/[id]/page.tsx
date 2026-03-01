@@ -15,6 +15,15 @@ import { ReviewsSection } from "@/components/ReviewsSection";
 import { isOpenNow } from "@/lib/hours";
 import { useReviewStore } from "@/stores/reviewStore";
 import { format, addDays } from "date-fns";
+import {
+  Phone,
+  EnvelopeSimple,
+  Globe,
+  FacebookLogo,
+  InstagramLogo,
+  XLogo,
+  TiktokLogo,
+} from "@phosphor-icons/react";
 import { Badge, BadgeDot } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -166,13 +175,13 @@ export default function RestaurantDetailPage({
             {activeTab === "about" && (
               <>
                 <section>
-                  <h2 className="font-serif text-[24px] font-bold text-text-primary tracking-[-0.5px] mb-3">
+                  <h2 className="text-[18px] font-semibold text-text-primary mb-3">
                     About
                   </h2>
-                  <p className="text-text-secondary leading-[1.65] text-[15px]">
+                  <p className="text-[13px] text-text-secondary leading-[1.6]">
                     {r.description}
                   </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-1.5">
                     {r.restaurantType && (
                       <Badge variant="default">{r.restaurantType}</Badge>
                     )}
@@ -183,20 +192,18 @@ export default function RestaurantDetailPage({
                     ))}
                   </div>
                   {r.googleRating != null && (
-                    <div className="mt-3 flex items-center gap-2 text-sm text-text-secondary">
+                    <div className="mt-2 flex items-center gap-2 text-[13px] text-text-muted">
                       <span className="text-gold font-semibold">
                         ★ {r.googleRating}
                       </span>
-                      <span className="text-text-muted">on Google</span>
+                      on Google
                       {r.googleReviewCount != null && (
-                        <span className="text-text-muted">
-                          ({r.googleReviewCount} reviews)
-                        </span>
+                        <> ({r.googleReviewCount} reviews)</>
                       )}
                     </div>
                   )}
                   {r.attributes && Object.keys(r.attributes).length > 0 && (
-                    <div className="mt-4 space-y-2">
+                    <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-text-secondary">
                       {Object.entries(r.attributes).map(
                         ([category, features]) => {
                           const enabled = Object.entries(features)
@@ -204,165 +211,52 @@ export default function RestaurantDetailPage({
                             .map(([k]) => k);
                           if (enabled.length === 0) return null;
                           return (
-                            <div key={category}>
-                              <p className="text-xs font-semibold text-text-muted uppercase mb-1">
-                                {category.replace(/_/g, " ")}
-                              </p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {enabled.map((feat) => (
-                                  <span
-                                    key={feat}
-                                    className="px-2 py-0.5 bg-surface border border-border rounded-full text-xs text-text-secondary"
-                                  >
-                                    {feat}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
+                            <span key={category}>
+                              <span className="font-medium text-text-muted uppercase tracking-wider">
+                                {category.replace(/_/g, " ")}:
+                              </span>{" "}
+                              {enabled.join(", ")}
+                            </span>
                           );
                         },
                       )}
                     </div>
                   )}
                 </section>
-                {/* Contact & social */}
-                {(r.phone ||
-                  r.website ||
-                  r.email ||
-                  r.facebookUrl ||
-                  r.instagramUrl ||
-                  r.twitterUrl ||
-                  r.tiktokUrl) && (
-                  <section>
-                    <h2 className="font-serif text-[24px] font-bold text-text-primary tracking-[-0.5px] mb-3">
-                      Contact
-                    </h2>
-                    <div className="space-y-2 text-sm">
-                      {r.phone && (
-                        <p className="text-text-secondary">
-                          <span className="font-medium text-text-primary">
-                            Phone:
-                          </span>{" "}
-                          <a
-                            href={`tel:${r.phone}`}
-                            className="text-brand-light hover:underline"
-                          >
-                            {r.phone}
-                          </a>
-                        </p>
-                      )}
-                      {r.email && (
-                        <p className="text-text-secondary">
-                          <span className="font-medium text-text-primary">
-                            Email:
-                          </span>{" "}
-                          <a
-                            href={`mailto:${r.email}`}
-                            className="text-brand-light hover:underline"
-                          >
-                            {r.email}
-                          </a>
-                        </p>
-                      )}
-                      {r.website && (
-                        <p className="text-text-secondary">
-                          <span className="font-medium text-text-primary">
-                            Website:
-                          </span>{" "}
-                          <a
-                            href={r.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-brand-light hover:underline"
-                          >
-                            {r.website}
-                          </a>
-                        </p>
-                      )}
-                      {(r.facebookUrl ||
-                        r.instagramUrl ||
-                        r.twitterUrl ||
-                        r.tiktokUrl) && (
-                        <div className="flex flex-wrap gap-4 mt-1">
-                          {r.facebookUrl && (
-                            <a
-                              href={r.facebookUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-brand-light hover:underline text-sm"
-                            >
-                              Facebook
-                            </a>
-                          )}
-                          {r.instagramUrl && (
-                            <a
-                              href={r.instagramUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-brand-light hover:underline text-sm"
-                            >
-                              Instagram
-                            </a>
-                          )}
-                          {r.twitterUrl && (
-                            <a
-                              href={r.twitterUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-brand-light hover:underline text-sm"
-                            >
-                              X (Twitter)
-                            </a>
-                          )}
-                          {r.tiktokUrl && (
-                            <a
-                              href={r.tiktokUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-brand-light hover:underline text-sm"
-                            >
-                              TikTok
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </section>
-                )}
                 <OpeningHoursSection openingHours={r.openingHours} />
                 {r.deals.length > 0 && (
                   <section>
-                    <h2 className="font-serif text-[24px] font-bold text-text-primary tracking-[-0.5px] mb-3">
+                    <h2 className="text-[18px] font-semibold text-text-primary mb-3">
                       Deals & Offers
                     </h2>
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {r.deals.map((deal) => (
                         <div
                           key={deal.id}
-                          className="border border-border rounded-[var(--radius-lg)] p-4 hover:border-brand-border transition-colors duration-[var(--dur-fast)] bg-surface"
+                          className="border border-border rounded-[var(--radius-md)] p-3 hover:border-brand-border transition-colors duration-[var(--dur-fast)] bg-surface"
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div>
-                              <h3 className="font-semibold text-text-primary">
+                              <h3 className="text-[13px] font-semibold text-text-primary">
                                 {deal.title}
                               </h3>
-                              <p className="text-[13px] text-text-muted mt-1">
+                              <p className="text-[12px] text-text-muted mt-0.5">
                                 {deal.description}
                               </p>
                               {deal.conditions && (
-                                <p className="text-[11px] text-text-muted mt-1 italic">
+                                <p className="text-[11px] text-text-muted mt-0.5 italic">
                                   {deal.conditions}
                                 </p>
                               )}
                             </div>
                             <div className="text-right shrink-0">
                               {deal.price && (
-                                <span className="text-lg font-bold text-brand-light">
+                                <span className="text-[15px] font-bold text-brand-light">
                                   ฿{deal.price}
                                 </span>
                               )}
                               {deal.discount && (
-                                <span className="text-lg font-bold text-brand-light">
+                                <span className="text-[15px] font-bold text-brand-light">
                                   {deal.discount}% off
                                 </span>
                               )}
@@ -371,7 +265,7 @@ export default function RestaurantDetailPage({
                                   setPreselectedDeal(deal);
                                   setShowBooking(true);
                                 }}
-                                className="block mt-2 text-[13px] font-medium text-brand-light hover:underline cursor-pointer bg-transparent border-none"
+                                className="block mt-1.5 text-[12px] font-medium text-brand-light hover:underline cursor-pointer bg-transparent border-none"
                               >
                                 Book with deal →
                               </button>
@@ -398,7 +292,7 @@ export default function RestaurantDetailPage({
         <div className="space-y-6">
           <Card className="sticky top-20">
             <CardContent className="space-y-4">
-              <h3 className="font-serif text-[20px] font-bold text-text-primary tracking-[-0.4px]">
+              <h3 className="text-[18px] font-semibold text-text-primary">
                 Check Availability
               </h3>
               <Select
@@ -415,7 +309,7 @@ export default function RestaurantDetailPage({
                 ))}
               </Select>
               <div>
-                <label className="text-[13px] font-semibold text-text-secondary mb-1.5 block flex items-center gap-2">
+                <label className="text-[13px] font-medium text-text-secondary mb-1.5 block flex items-center gap-2">
                   Party Size{" "}
                   <span className="font-my text-[12px] text-text-muted">
                     / လူ
@@ -444,11 +338,11 @@ export default function RestaurantDetailPage({
                 </div>
               </div>
               <div>
-                <p className="text-[13px] text-text-muted mb-2">
-                  Available slots:
+                <p className="text-[12px] text-text-muted mb-2">
+                  Available slots
                 </p>
                 {previewSlots.length === 0 ? (
-                  <p className="text-[13px] text-text-muted italic">
+                  <p className="text-[12px] text-text-muted italic">
                     No slots today
                   </p>
                 ) : (
@@ -480,7 +374,7 @@ export default function RestaurantDetailPage({
                 )}
                 {previewSlots.length > 12 && (
                   <p className="text-[11px] text-text-muted mt-1">
-                    +{previewSlots.length - 12} more slots
+                    +{previewSlots.length - 12} more
                   </p>
                 )}
               </div>
@@ -494,10 +388,113 @@ export default function RestaurantDetailPage({
               >
                 Book a Table
               </Button>
+
+              {/* Contact beside book */}
+              {(r.phone ||
+                r.email ||
+                r.website ||
+                r.facebookUrl ||
+                r.instagramUrl ||
+                r.twitterUrl ||
+                r.tiktokUrl) && (
+                <div className="pt-3 border-t border-border space-y-1.5">
+                  <p className="text-[11px] font-medium text-text-muted uppercase tracking-wider mb-1">
+                    Contact
+                  </p>
+                  <div className="space-y-1.5 text-[13px]">
+                    {r.phone && (
+                      <a
+                        href={`tel:${r.phone}`}
+                        className="flex items-center gap-2 py-1 text-text-secondary hover:text-brand-light transition-colors"
+                      >
+                        <Phone size={16} weight="regular" />
+                        Call
+                      </a>
+                    )}
+                    {r.email && (
+                      <a
+                        href={`mailto:${r.email}`}
+                        className="flex items-center gap-2 py-1 text-text-secondary hover:text-brand-light transition-colors"
+                      >
+                        <EnvelopeSimple size={16} weight="regular" />
+                        Email
+                      </a>
+                    )}
+                    {r.website && (
+                      <a
+                        href={r.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 py-1 text-text-secondary hover:text-brand-light transition-colors"
+                      >
+                        <Globe size={16} weight="regular" />
+                        Website
+                      </a>
+                    )}
+                    {r.facebookUrl && (
+                      <a
+                        href={r.facebookUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 py-1 text-text-secondary hover:text-brand-light transition-colors"
+                      >
+                        <FacebookLogo size={16} weight="regular" />
+                        Facebook
+                      </a>
+                    )}
+                    {r.instagramUrl && (
+                      <a
+                        href={r.instagramUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 py-1 text-text-secondary hover:text-brand-light transition-colors"
+                      >
+                        <InstagramLogo size={16} weight="regular" />
+                        Instagram
+                      </a>
+                    )}
+                    {r.twitterUrl && (
+                      <a
+                        href={r.twitterUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 py-1 text-text-secondary hover:text-brand-light transition-colors"
+                      >
+                        <XLogo size={16} weight="regular" />X
+                      </a>
+                    )}
+                    {r.tiktokUrl && (
+                      <a
+                        href={r.tiktokUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 py-1 text-text-secondary hover:text-brand-light transition-colors"
+                      >
+                        <TiktokLogo size={16} weight="regular" />
+                        TikTok
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Mobile floating call button */}
+      {r.phone && (
+        <a
+          href={`tel:${r.phone}`}
+          className={cn(
+            "fixed bottom-6 right-6 z-[var(--z-nav)] flex items-center justify-center w-14 h-14 rounded-full bg-brand text-white shadow-[var(--shadow-xl)] hover:bg-brand-hover transition-colors",
+            "lg:hidden",
+          )}
+          aria-label="Call restaurant"
+        >
+          <Phone size={24} weight="bold" />
+        </a>
+      )}
 
       {bookingSuccess && (
         <div className="fixed inset-x-0 top-20 z-[var(--z-toast)] flex justify-center animate-slide-down">

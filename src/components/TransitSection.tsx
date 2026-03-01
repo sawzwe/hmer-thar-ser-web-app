@@ -49,11 +49,11 @@ export function TransitSection({
 
   return (
     <section>
-      <h2 className="font-serif text-[24px] font-bold text-text-primary tracking-[-0.5px] mb-3">
+      <h2 className="text-[18px] font-semibold text-text-primary mb-3">
         Nearby Transit
       </h2>
       {geoStatus === "granted" && distanceKm !== null && (
-        <div className="mb-3 px-3 py-2.5 bg-brand-dim border border-brand-border rounded-[var(--radius-md)] text-[13px] text-brand-light flex items-center gap-2">
+        <div className="mb-3 px-3 py-2 bg-brand-dim border border-brand-border rounded-[var(--radius-md)] text-[13px] text-brand-light flex items-center gap-2">
           <svg
             className="w-4 h-4 shrink-0"
             fill="none"
@@ -95,7 +95,7 @@ export function TransitSection({
         {transitNearby.map((stop) => (
           <div
             key={`${stop.type}-${stop.name}`}
-            className="flex items-center justify-between p-3 rounded-[var(--radius-md)] border border-border bg-surface transition-colors duration-[var(--dur-fast)] hover:bg-card"
+            className="flex items-center justify-between p-2.5 rounded-[var(--radius-md)] border border-border bg-surface transition-colors duration-[var(--dur-fast)] hover:bg-card"
           >
             <div className="flex items-center gap-2.5">
               <Badge variant={transitBadge[stop.type]}>
