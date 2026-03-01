@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Restaurant, Deal, Slot } from "@/types";
+import { useState, useMemo } from "react";
+import { Restaurant, Deal } from "@/types";
 import { getSlotsForDate } from "@/lib/slots";
 import { useBookingStore } from "@/stores/bookingStore";
 import { useWaitlistStore } from "@/stores/waitlistStore";
@@ -32,12 +32,14 @@ export function BookingModal({ restaurant, preselectedDeal, onClose, onSuccess }
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [notes, setNotes] = useState("");
-  const [slots, setSlots] = useState<Slot[]>([]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [waitlistJoined, setWaitlistJoined] = useState(false);
 
-  useEffect(() => { setSlots(getSlotsForDate(restaurant.id, date)); setTime(""); }, [date, restaurant.id]);
+  const slots = useMemo(
+    () => getSlotsForDate(restaurant.id, date),
+    [restaurant.id, date]
+  );
 
   const availableDates = Array.from({ length: 14 }, (_, i) => { const d = addDays(new Date(), i); return { value: format(d, "yyyy-MM-dd"), label: format(d, "EEE, MMM d") }; });
   const selectedSlot = slots.find((s) => s.time === time);
@@ -104,7 +106,7 @@ export function BookingModal({ restaurant, preselectedDeal, onClose, onSuccess }
             )}
 
             <div className="grid grid-cols-2 gap-4">
-              <Select label="Date" labelMy="/ ရက်" value={date} onChange={(e) => setDate(e.target.value)} className="w-full">
+              <Select label="Date" labelMy="/ ရက်" value={date} onChange={(e) => { setDate(e.target.value); setTime(""); }} className="w-full">
                 {availableDates.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
               </Select>
 

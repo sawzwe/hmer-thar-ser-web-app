@@ -32,6 +32,7 @@ export async function PATCH(
     const { id } = await params;
     const { supabase } = await requireVendorOwner(id);
     const body = await req.json();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- intentionally excluding restaurant_id
     const { restaurant_id, ...rest } = body;
     const { data, error } = await supabase
       .from("restaurants")

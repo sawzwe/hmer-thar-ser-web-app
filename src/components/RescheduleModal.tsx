@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Booking, Slot } from "@/types";
+import { useState, useMemo } from "react";
+import { Booking } from "@/types";
 import { getSlotsForDate } from "@/lib/slots";
 import { useBookingStore } from "@/stores/bookingStore";
 import { useRestaurantStore } from "@/stores/restaurantStore";
@@ -19,11 +19,13 @@ export function RescheduleModal({ booking, onClose, onSuccess }: RescheduleModal
   const restaurant = restaurants.find((r) => r.id === booking.restaurantId);
   const [date, setDate] = useState(booking.date);
   const [time, setTime] = useState("");
-  const [slots, setSlots] = useState<Slot[]>([]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => { setSlots(getSlotsForDate(booking.restaurantId, date)); setTime(""); }, [date, booking.restaurantId]);
+  const slots = useMemo(
+    () => getSlotsForDate(booking.restaurantId, date),
+    [booking.restaurantId, date]
+  );
 
   const availableDates = Array.from({ length: 14 }, (_, i) => { const d = addDays(new Date(), i); return { value: format(d, "yyyy-MM-dd"), label: format(d, "EEE, MMM d") }; });
 
@@ -43,7 +45,7 @@ export function RescheduleModal({ booking, onClose, onSuccess }: RescheduleModal
           <span className="font-medium text-text-primary">{restaurant?.name}</span> · Ref: {booking.bookingRef}
           <br />Current: {booking.date} at {booking.time} · {booking.partySize} guests
         </div>
-        <Select label="New Date" labelMy="/ ရက်" value={date} onChange={(e) => setDate(e.target.value)} className="w-full">
+        <Select label="New Date" labelMy="/ ရက်" value={date} onChange={(e) => { setDate(e.target.value); setTime(""); }} className="w-full">
           {availableDates.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
         </Select>
         <div>

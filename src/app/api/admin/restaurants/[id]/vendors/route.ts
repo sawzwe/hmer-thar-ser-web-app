@@ -89,7 +89,6 @@ export async function GET(
       return NextResponse.json({ vendors: [] });
     }
 
-    const userIds = [...new Set(vrRows.map((r) => r.vendor_id))];
     const { data: users } = await admin.auth.admin.listUsers({
       page: 1,
       perPage: 500,

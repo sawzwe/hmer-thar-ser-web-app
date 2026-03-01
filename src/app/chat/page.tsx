@@ -91,7 +91,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const sidebarOpen = true;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -154,7 +154,7 @@ export default function ChatPage() {
 
       if (!res.ok) throw new Error(data.error || "Failed to get response");
 
-      const { text: displayText, recs } = parseRecs(data.text);
+      const { recs } = parseRecs(data.text);
       const assistantMsg: ChatMessage = {
         role: "assistant",
         content: data.text,

@@ -39,7 +39,7 @@ export default async function VendorDashboard() {
         Good morning, {user.name} 👋
       </h1>
       <p className="text-sm text-text-muted mb-8">
-        Here's what's happening with your restaurants today.
+        Here&apos;s what&apos;s happening with your restaurants today.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
