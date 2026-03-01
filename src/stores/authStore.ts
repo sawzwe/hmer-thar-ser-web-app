@@ -5,6 +5,10 @@ import { UserFactory } from "@/lib/auth/UserFactory";
 import { getSessionWithTimeout } from "@/lib/auth/supabaseAuth";
 import type { IUser } from "@/lib/auth/types";
 
+// getSession() reads from localStorage — no Navigator lock needed.
+// getUser() makes a server round-trip and ACQUIRES the Navigator lock.
+// We use getSession() on init so that multiple open tabs don't block each other.
+
 let authSubscription: { unsubscribe: () => void } | null = null;
 let visibilityHandler: (() => void) | null = null;
 let visibilityDebounceId: ReturnType<typeof setTimeout> | null = null;
@@ -43,7 +47,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
       const supabase = createClient();
 
-      const user = await UserFactory.fromSupabase(supabase);
+      // getSession() is lock-free: reads the stored session without contacting the server.
+      // The middleware already validates the JWT server-side on every request.
+      const {
+        data: { session: initialSession },
+      } = await supabase.auth.getSession();
+      const user = initialSession?.user
+        ? await UserFactory.resolveUser(supabase, initialSession.user)
+        : UserFactory.createGuest();
       set({ user, loading: false, initialized: true });
 
       if (authSubscription) {

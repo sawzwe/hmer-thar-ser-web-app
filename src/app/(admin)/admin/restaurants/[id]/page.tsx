@@ -15,6 +15,8 @@ import {
   TiktokLogo,
   Globe,
   Phone,
+  Plus,
+  Trash,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
@@ -50,7 +52,7 @@ const DAYS = [
 function deriveOpeningHours(
   oh: unknown,
   openTime: string | null,
-  closeTime: string | null
+  closeTime: string | null,
 ): DayHours[] {
   const open = openTime?.slice(0, 5) || "11:00";
   const close = closeTime?.slice(0, 5) || "22:00";
@@ -98,12 +100,69 @@ type Restaurant = {
   google_place_id: string | null;
   google_rating: number | null;
   google_review_count: number | null;
+  attributes?: Record<string, Record<string, boolean>> | null;
 };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="text-[10px] font-bold text-brand uppercase tracking-[0.15em] border-b border-border pb-0.5 mb-1">
       {children}
+    </div>
+  );
+}
+
+function AddFeatureRow({
+  category,
+  onAdd,
+  placeholder = "Add feature…",
+}: {
+  category: string;
+  onAdd: (category: string, feature: string) => void;
+  placeholder?: string;
+}) {
+  const [value, setValue] = useState("");
+  const submit = () => {
+    if (!value.trim()) return;
+    onAdd(category, value);
+    setValue("");
+  };
+  return (
+    <div className="flex gap-2">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), submit())}
+        placeholder={placeholder}
+        className="flex-1 h-9 px-3 text-[13px] bg-card text-text-primary placeholder:text-text-muted border border-border-strong rounded-[var(--radius-md)] outline-none focus:border-brand"
+      />
+      <Button type="button" size="sm" disabled={!value.trim()} onClick={submit}>
+        <Plus size={14} weight="bold" />
+      </Button>
+    </div>
+  );
+}
+
+function AddCategoryRow({ onAdd }: { onAdd: (name: string) => void }) {
+  const [value, setValue] = useState("");
+  const submit = () => {
+    if (!value.trim()) return;
+    onAdd(value);
+    setValue("");
+  };
+  return (
+    <div className="flex gap-2 pt-2 border-t border-border">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), submit())}
+        placeholder="New category (e.g. Crowd, Payments, Amenities)"
+        className="flex-1 h-9 px-3 text-[13px] bg-card text-text-primary placeholder:text-text-muted border border-border-strong rounded-[var(--radius-md)] outline-none focus:border-brand"
+      />
+      <Button type="button" size="sm" disabled={!value.trim()} onClick={submit}>
+        <Plus size={14} weight="bold" /> Add category
+      </Button>
     </div>
   );
 }
@@ -155,6 +214,7 @@ export default function AdminRestaurantEditPage() {
     tiktok_url: "",
     logo_url: "",
     street_view_url: "",
+    attributes: {} as Record<string, Record<string, boolean>>,
   });
 
   useEffect(() => {
@@ -162,7 +222,7 @@ export default function AdminRestaurantEditPage() {
     const openingHours = deriveOpeningHours(
       restaurant.opening_hours,
       restaurant.open_time,
-      restaurant.close_time
+      restaurant.close_time,
     );
     setForm({
       name: restaurant.name ?? "",
@@ -195,6 +255,10 @@ export default function AdminRestaurantEditPage() {
       tiktok_url: restaurant.tiktok_url ?? "",
       logo_url: restaurant.logo_url ?? "",
       street_view_url: restaurant.street_view_url ?? "",
+      attributes:
+        restaurant.attributes && typeof restaurant.attributes === "object"
+          ? restaurant.attributes
+          : {},
     });
   }, [restaurant]);
 
@@ -207,6 +271,7 @@ export default function AdminRestaurantEditPage() {
           ...form,
           cuisine_tags: form.cuisine_tags,
           opening_hours: form.opening_hours,
+          attributes: form.attributes,
         }),
       });
       const json = await res.json();
@@ -227,6 +292,54 @@ export default function AdminRestaurantEditPage() {
       cuisine_tags: f.cuisine_tags.includes(c)
         ? f.cuisine_tags.filter((x) => x !== c)
         : [...f.cuisine_tags, c],
+    }));
+  };
+
+  const removeAttribute = (category: string, feature: string) => {
+    setForm((f) => {
+      const cat = f.attributes[category];
+      if (!cat) return f;
+      const next = { ...cat };
+      delete next[feature];
+      const nextAttrs = { ...f.attributes };
+      if (Object.keys(next).length === 0) delete nextAttrs[category];
+      else nextAttrs[category] = next;
+      return { ...f, attributes: nextAttrs };
+    });
+  };
+
+  const addAttribute = (category: string, feature: string) => {
+    const trimmed = feature.trim().replace(/_/g, " ");
+    if (!trimmed) return;
+    setForm((f) => ({
+      ...f,
+      attributes: {
+        ...f.attributes,
+        [category]: {
+          ...(f.attributes[category] ?? {}),
+          [trimmed]: true,
+        },
+      },
+    }));
+  };
+
+  const removeAttributeCategory = (category: string) => {
+    setForm((f) => {
+      const next = { ...f.attributes };
+      delete next[category];
+      return { ...f, attributes: next };
+    });
+  };
+
+  const addAttributeCategory = (categoryName: string) => {
+    const trimmed = categoryName.trim().replace(/_/g, " ");
+    if (!trimmed) return;
+    setForm((f) => ({
+      ...f,
+      attributes: {
+        ...f.attributes,
+        [trimmed]: {},
+      },
     }));
   };
 
@@ -305,9 +418,7 @@ export default function AdminRestaurantEditPage() {
         <Select
           label="Province"
           value={form.province}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, province: e.target.value }))
-          }
+          onChange={(e) => setForm((f) => ({ ...f, province: e.target.value }))}
         >
           <option value="">Select province</option>
           {PROVINCES.map((p) => (
@@ -346,13 +457,11 @@ export default function AdminRestaurantEditPage() {
           }
         >
           <option value="">Select subdistrict</option>
-          {(BANGKOK_SUBDISTRICTS_BY_DISTRICT[form.district] ?? []).map(
-            (s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ),
-          )}
+          {(BANGKOK_SUBDISTRICTS_BY_DISTRICT[form.district] ?? []).map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
           {form.subdistrict &&
             !(BANGKOK_SUBDISTRICTS_BY_DISTRICT[form.district] ?? []).includes(
               form.subdistrict,
@@ -363,7 +472,9 @@ export default function AdminRestaurantEditPage() {
         <Input
           label="Postal Code"
           value={form.postal_code}
-          onChange={(e) => setForm((f) => ({ ...f, postal_code: e.target.value }))}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, postal_code: e.target.value }))
+          }
           placeholder="10110"
         />
         <Input
@@ -415,7 +526,9 @@ export default function AdminRestaurantEditPage() {
         <Input
           label="Restaurant Type"
           value={form.restaurant_type}
-          onChange={(e) => setForm((f) => ({ ...f, restaurant_type: e.target.value }))}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, restaurant_type: e.target.value }))
+          }
           placeholder="e.g. Burmese restaurant"
         />
       </div>
@@ -437,6 +550,57 @@ export default function AdminRestaurantEditPage() {
         <option value="paused">Paused</option>
         <option value="archived">Archived</option>
       </Select>
+
+      <SectionLabel>Attributes</SectionLabel>
+      <p className="text-[12px] text-text-muted mb-3">
+        Crowd, payments, amenities, etc. Shown on the public restaurant page.
+      </p>
+      <div className="space-y-3">
+        {Object.entries(form.attributes).map(([category, features]) => {
+          const enabled = Object.entries(features)
+            .filter(([, v]) => v)
+            .map(([k]) => k);
+          return (
+            <div
+              key={category}
+              className="bg-surface border border-border rounded-[var(--radius-md)] p-3"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+                  {category.replace(/_/g, " ")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => removeAttributeCategory(category)}
+                  className="p-1 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                  title="Remove category"
+                >
+                  <Trash size={14} weight="bold" />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {enabled.map((feat) => (
+                  <button
+                    key={feat}
+                    type="button"
+                    onClick={() => removeAttribute(category, feat)}
+                    className="px-2 py-0.5 bg-card border border-border rounded-full text-xs text-text-secondary hover:border-danger hover:text-danger transition-colors flex items-center gap-1"
+                  >
+                    {feat}
+                    <span className="opacity-60">×</span>
+                  </button>
+                ))}
+              </div>
+              <AddFeatureRow
+                category={category}
+                onAdd={addAttribute}
+                placeholder="Add feature…"
+              />
+            </div>
+          );
+        })}
+        <AddCategoryRow onAdd={addAttributeCategory} />
+      </div>
     </div>
   );
 
@@ -446,7 +610,14 @@ export default function AdminRestaurantEditPage() {
       <ImageUpload
         label="Restaurant"
         value={form.image_url}
-        slug={form.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "restaurant"}
+        slug={
+          form.slug ||
+          form.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "") ||
+          "restaurant"
+        }
         onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
       />
 
@@ -463,7 +634,9 @@ export default function AdminRestaurantEditPage() {
           label="Street View URL"
           type="url"
           value={form.street_view_url}
-          onChange={(e) => setForm((f) => ({ ...f, street_view_url: e.target.value }))}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, street_view_url: e.target.value }))
+          }
           placeholder="https://..."
         />
       </div>
@@ -484,7 +657,8 @@ export default function AdminRestaurantEditPage() {
               <div>
                 <div className="text-[11px] text-text-muted mb-1">RATING</div>
                 <div className="text-[13px]">
-                  <span className="text-amber-500">★</span> {restaurant.google_rating} / 5
+                  <span className="text-amber-500">★</span>{" "}
+                  {restaurant.google_rating} / 5
                   {restaurant.google_review_count != null && (
                     <span className="ml-2 text-text-muted">
                       ({restaurant.google_review_count} reviews)
@@ -500,10 +674,30 @@ export default function AdminRestaurantEditPage() {
   );
 
   const SOCIAL_FIELDS = [
-    { key: "facebook_url" as const, label: "Facebook", Icon: FacebookLogo, placeholder: "https://facebook.com/..." },
-    { key: "instagram_url" as const, label: "Instagram", Icon: InstagramLogo, placeholder: "https://instagram.com/..." },
-    { key: "twitter_url" as const, label: "X (Twitter)", Icon: XLogo, placeholder: "https://x.com/..." },
-    { key: "tiktok_url" as const, label: "TikTok", Icon: TiktokLogo, placeholder: "https://tiktok.com/@..." },
+    {
+      key: "facebook_url" as const,
+      label: "Facebook",
+      Icon: FacebookLogo,
+      placeholder: "https://facebook.com/...",
+    },
+    {
+      key: "instagram_url" as const,
+      label: "Instagram",
+      Icon: InstagramLogo,
+      placeholder: "https://instagram.com/...",
+    },
+    {
+      key: "twitter_url" as const,
+      label: "X (Twitter)",
+      Icon: XLogo,
+      placeholder: "https://x.com/...",
+    },
+    {
+      key: "tiktok_url" as const,
+      label: "TikTok",
+      Icon: TiktokLogo,
+      placeholder: "https://tiktok.com/@...",
+    },
   ];
 
   const ContactTab = () => (
@@ -544,7 +738,9 @@ export default function AdminRestaurantEditPage() {
           <input
             type="url"
             value={form.website}
-            onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, website: e.target.value }))
+            }
             placeholder="https://..."
             className="h-11 px-4 bg-card text-[15px] text-text-primary placeholder:text-text-muted border border-border-strong rounded-[var(--radius-md)] outline-none focus:border-brand focus:shadow-[0_0_0_3px_var(--brand-dim)]"
           />
@@ -562,7 +758,9 @@ export default function AdminRestaurantEditPage() {
             <input
               type="url"
               value={form[key]}
-              onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, [key]: e.target.value }))
+              }
               placeholder={placeholder}
               className="h-11 px-4 bg-card text-[15px] text-text-primary placeholder:text-text-muted border border-border-strong rounded-[var(--radius-md)] outline-none focus:border-brand focus:shadow-[0_0_0_3px_var(--brand-dim)]"
             />
@@ -630,11 +828,7 @@ export default function AdminRestaurantEditPage() {
 
           {/* Footer actions */}
           <div className="px-7 py-4 border-t border-border bg-surface flex gap-3 items-center">
-            {error && (
-              <p className="text-sm text-danger flex-1">
-                {error}
-              </p>
-            )}
+            {error && <p className="text-sm text-danger flex-1">{error}</p>}
             <div className="flex gap-3 ml-auto">
               <Button type="submit" disabled={mutation.isPending}>
                 {mutation.isPending ? "Saving…" : "Save changes"}
@@ -650,9 +844,13 @@ export default function AdminRestaurantEditPage() {
       </form>
 
       <div className="mt-6 bg-card border border-border rounded-[var(--radius-xl)] p-6">
-        <h2 className="font-semibold text-text-primary mb-2">Availability by date</h2>
+        <h2 className="font-semibold text-text-primary mb-2">
+          Availability by date
+        </h2>
         <p className="text-sm text-text-muted mb-4">
-          Booking slots are set per date, not by a single schedule. Vendors manage which dates and times are available under the <strong>Availability</strong> tab in the vendor dashboard.
+          Booking slots are set per date, not by a single schedule. Vendors
+          manage which dates and times are available under the{" "}
+          <strong>Availability</strong> tab in the vendor dashboard.
         </p>
         <SlotDatesSummary restaurantId={id} />
       </div>
@@ -676,7 +874,12 @@ function SlotDatesSummary({ restaurantId }: { restaurantId: string }) {
       const res = await fetch(`/api/vendor/restaurants/${restaurantId}/slots`);
       if (!res.ok) return [];
       const json = await res.json();
-      return json as { date: string; time: string; capacity: number; remaining: number }[];
+      return json as {
+        date: string;
+        time: string;
+        capacity: number;
+        remaining: number;
+      }[];
     },
   });
   const dates = slots?.length
@@ -686,11 +889,13 @@ function SlotDatesSummary({ restaurantId }: { restaurantId: string }) {
     <div className="bg-surface border border-border rounded-[var(--radius-lg)] p-4">
       {dates.length === 0 ? (
         <p className="text-sm text-text-muted">
-          No slots configured yet. Vendors can generate slots from the Availability tab.
+          No slots configured yet. Vendors can generate slots from the
+          Availability tab.
         </p>
       ) : (
         <p className="text-sm text-text-secondary">
-          Slots configured for <strong>{dates.length}</strong> date{dates.length !== 1 ? "s" : ""} (e.g. {dates.slice(0, 3).join(", ")}).
+          Slots configured for <strong>{dates.length}</strong> date
+          {dates.length !== 1 ? "s" : ""} (e.g. {dates.slice(0, 3).join(", ")}).
         </p>
       )}
     </div>
