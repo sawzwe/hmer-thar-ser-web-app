@@ -32,7 +32,6 @@ export function BookingModal({ restaurant, preselectedDeal, onClose, onSuccess }
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [notes, setNotes] = useState("");
-  const [time, setTime] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [waitlistJoined, setWaitlistJoined] = useState(false);

@@ -208,7 +208,7 @@ export default function RestaurantDetailPage({ params }: { params: Promise<{ id:
 
       {showBooking && (
         <BookingModal restaurant={restaurant} preselectedDeal={preselectedDeal} onClose={() => setShowBooking(false)}
-          onSuccess={(ref) => { setShowBooking(false); setBookingSuccess(ref); setPreviewSlots(getSlotsForDate(restaurant.id, previewDate)); }} />
+          onSuccess={(ref) => { setShowBooking(false); setBookingSuccess(ref); }} />
       )}
     </div>
   );
