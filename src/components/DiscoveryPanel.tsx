@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Map, Marker, Circle } from "leaflet";
 import type { Restaurant } from "@/types";
+import { useLanguageStore } from "@/stores/languageStore";
+import { t } from "@/lib/i18n/translations";
 import { isOpenNow } from "@/lib/hours";
 import { getRestaurantPath } from "@/lib/restaurants/url";
 import { getPinColor, getPinEmoji } from "@/lib/map/cuisine";
@@ -44,6 +46,7 @@ export function DiscoveryPanel({
   radiusKm,
   onRadiusChange,
 }: DiscoveryPanelProps) {
+  const lang = useLanguageStore((s) => s.lang);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const circleRef = useRef<Circle | null>(null);
@@ -181,10 +184,10 @@ export function DiscoveryPanel({
         </div>
         <div style="font-size:11px;color:#5C5B54;margin-bottom:10px;">${r.cuisineTags.join(", ") || r.area}</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
-          <span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:100px;background:#111110;color:#A09F97;">${formatDistance(dist)} away</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;background:${statusStyle.bg};color:${statusStyle.color};">${status}</span>
+          <span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:100px;background:#111110;color:#A09F97;">${formatDistance(dist)} ${t(lang, "away")}</span>
+          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;background:${statusStyle.bg};color:${statusStyle.color};">${t(lang, status)}</span>
         </div>
-        <a href="/restaurant/${getRestaurantPath(r) || r.id}" style="display:block;text-align:center;background:#E8421A;color:white;padding:9px 16px;border-radius:100px;font-size:12px;font-weight:700;text-decoration:none;">View Details →</a>
+        <a href="/restaurant/${getRestaurantPath(r) || r.id}" style="display:block;text-align:center;background:#E8421A;color:white;padding:9px 16px;border-radius:100px;font-size:12px;font-weight:700;text-decoration:none;">${t(lang, "viewDetails")}</a>
       `;
 
       const marker = L.marker([r.geo.lat, r.geo.lng], { icon })
@@ -198,7 +201,7 @@ export function DiscoveryPanel({
 
       markersRef.current[r.id] = marker;
     });
-  }, [filteredRestaurants, centerLat, centerLng, mapReady]);
+  }, [filteredRestaurants, centerLat, centerLng, mapReady, lang]);
 
   const handleCardClick = useCallback((r: Restaurant) => {
     setSelectedId(r.id);
@@ -228,16 +231,16 @@ export function DiscoveryPanel({
                 onClick={() => onRadiusChange(km)}
                 className={`ropt ${radiusKm === km ? "active" : ""}`}
               >
-                {km} km
+                {km} {t(lang, "km")}
               </button>
             ))}
           </div>
           <div className="found-badge">
             <div className="found-dot" />
             <span className="found-n">
-              {loading ? "Locating..." : `${filteredRestaurants.length} restaurants nearby`}
+              {loading ? t(lang, "locating") : `${filteredRestaurants.length} ${t(lang, "restaurantsNearby")}`}
             </span>
-            <span className="found-sub">· tap a pin</span>
+            <span className="found-sub">{t(lang, "tapPin")}</span>
           </div>
         </div>
       </div>
@@ -278,13 +281,13 @@ export function DiscoveryPanel({
                   {r.cuisineTags[0] || r.area} · {formatDistance(dist)}
                 </div>
                 <div className="lc-footer">
-                  <span className={`lc-status ${status}`}>{status}</span>
+                  <span className={`lc-status ${status}`}>{t(lang, status)}</span>
                   <Link
                     href={`/restaurant/${getRestaurantPath(r) || r.id}`}
                     className="lc-btn"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    Book →
+                    {t(lang, "book")} →
                   </Link>
                 </div>
               </div>

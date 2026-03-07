@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { CaretDown } from "@phosphor-icons/react";
 import { useRestaurantStore } from "@/stores/restaurantStore";
 import { useBookingStore } from "@/stores/bookingStore";
 import { useReviewStore } from "@/stores/reviewStore";
 import { useAuthStore } from "@/stores/authStore";
+import { useLanguageStore } from "@/stores/languageStore";
 import { initializeSlotsIfNeeded } from "@/lib/slots";
 import { runMigrations } from "@/lib/storage";
+import { t } from "@/lib/i18n/translations";
 import { Toast } from "./Toast";
 import { AuthModal } from "./AuthModal";
 import { cn } from "@/lib/utils";
@@ -23,12 +26,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
   const initialize = useAuthStore((s) => s.initialize);
+  const lang = useLanguageStore((s) => s.lang);
+  const setLang = useLanguageStore((s) => s.setLang);
+  const hydrate = useLanguageStore((s) => s.hydrate);
 
   const [authModal, setAuthModal] = useState<"sign-in" | "sign-up" | null>(
     null,
   );
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [signOutLoading, setSignOutLoading] = useState(false);
+
+  const LANG_OPTIONS = [
+    { value: "en" as const, label: "English", flag: "🇬🇧" },
+    { value: "my" as const, label: "မြန်မာ", flag: "🇲🇲" },
+  ] as const;
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = lang;
+    }
+  }, [lang]);
 
   useEffect(() => {
     runMigrations();
@@ -49,9 +71,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [loadRestaurants, loadAllReviews, initialize]);
 
   const navItems = [
-    { href: "/", label: "Discover" },
-    { href: "/chat", label: "What to eat?" },
-    { href: "/bookings", label: "Bookings" },
+    { href: "/", label: t(lang, "discover") },
+    { href: "/chat", label: t(lang, "whatToEat") },
+    { href: "/bookings", label: t(lang, "bookings") },
   ];
 
   const isChat = pathname === "/chat";
@@ -89,6 +111,59 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
 
         <div className="flex items-center gap-1">
+          <div className="relative mr-2 md:mr-3">
+            <button
+              type="button"
+              onClick={() => setLangDropdownOpen((o) => !o)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-full)] border border-border-strong text-[13px] font-medium text-text-primary hover:border-brand hover:text-text-primary transition-all bg-transparent cursor-pointer"
+            >
+              <span className="text-base leading-none">
+                {LANG_OPTIONS.find((o) => o.value === lang)?.flag ?? "🌐"}
+              </span>
+              <span className={cn(lang === "my" && "font-my")}>
+                {LANG_OPTIONS.find((o) => o.value === lang)?.label ?? lang}
+              </span>
+              <CaretDown
+                size={12}
+                weight="bold"
+                className={cn(
+                  "text-text-muted transition-transform",
+                  langDropdownOpen && "rotate-180",
+                )}
+              />
+            </button>
+            {langDropdownOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-[var(--z-overlay)]"
+                  onClick={() => setLangDropdownOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 min-w-[140px] bg-surface border border-border-strong rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] z-[calc(var(--z-overlay)+1)] overflow-hidden">
+                  {LANG_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setLang(opt.value);
+                        setLangDropdownOpen(false);
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-4 py-2.5 text-left text-[13px] font-medium transition-all cursor-pointer border-none",
+                        lang === opt.value
+                          ? "bg-brand-dim text-brand-light"
+                          : "text-text-secondary hover:bg-card hover:text-text-primary",
+                      )}
+                    >
+                      <span className="text-base leading-none">{opt.flag}</span>
+                      <span className={opt.value === "my" ? "font-my" : ""}>
+                        {opt.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           {isHome ? (
             <>
               {user && user.isAuthenticated() ? (
@@ -96,14 +171,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   href="/bookings"
                   className="hidden md:flex px-4 py-2 rounded-[100px] border border-border-strong text-[13px] font-medium text-text-secondary hover:text-text-primary transition-all"
                 >
-                  Bookings
+                  {t(lang, "bookings")}
                 </Link>
               ) : (
                 <button
                   onClick={() => setAuthModal("sign-in")}
                   className="hidden md:flex px-4 py-2 rounded-[100px] border border-border-strong text-[13px] font-medium text-text-muted hover:text-text-primary transition-all bg-transparent cursor-pointer"
                 >
-                  Sign in
+                  {t(lang, "signIn")}
                 </button>
               )}
               {user?.isAuthenticated() ? (
@@ -111,7 +186,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   href="/bookings"
                   className="flex items-center gap-1 px-4 py-2 rounded-[100px] bg-brand text-white text-[13px] font-semibold hover:bg-brand-hover transition-all"
                 >
-                  Get Started
+                  {t(lang, "getStarted")}
                   <span className="hidden sm:inline">→</span>
                 </Link>
               ) : (
@@ -119,7 +194,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   onClick={() => setAuthModal("sign-up")}
                   className="flex items-center gap-1 px-4 py-2 rounded-[100px] bg-brand text-white text-[13px] font-semibold hover:bg-brand-hover transition-all cursor-pointer border-none"
                 >
-                  Get Started
+                  {t(lang, "getStarted")}
                   <span className="hidden sm:inline">→</span>
                 </button>
               )}
@@ -225,7 +300,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={() => setAuthModal("sign-in")}
               className="px-3 py-[5px] rounded-[var(--radius-full)] border border-border-strong text-[13px] font-medium text-text-muted hover:border-brand hover:text-text-primary transition-all duration-[var(--dur-fast)] bg-transparent cursor-pointer"
             >
-              Sign in
+              {t(lang, "signIn")}
             </button>
           )}
             </>
@@ -246,9 +321,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-[12px] text-text-muted ml-2">
               &copy; {new Date().getFullYear()}
             </span>
-          </div>
-          <div className="text-[12px] text-text-muted">
-            Dark-first &middot; EN + MY
           </div>
         </footer>
       )}

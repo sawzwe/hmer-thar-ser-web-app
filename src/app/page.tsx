@@ -1,173 +1,52 @@
-"use client";
+import type { Metadata } from "next";
+import { HomePageClient } from "@/components/HomePageClient";
 
-import { useEffect, useState, useCallback } from "react";
-import { MagnifyingGlass, MapPin } from "@phosphor-icons/react";
-import { useRestaurantStore } from "@/stores/restaurantStore";
-import { getDistanceKm } from "@/lib/map/distance";
-import { DiscoveryPanel } from "@/components/DiscoveryPanel";
-import type { Restaurant } from "@/types";
+type SeoRow = {
+  title?: string | null;
+  description?: string | null;
+  og_title?: string | null;
+  og_description?: string | null;
+  og_image?: string | null;
+  keywords?: string | null;
+};
 
-const BANGKOK = { lat: 13.7563, lng: 100.5018 } as const;
-const AREA_FILTERS = [
-  "All",
-  "Sukhumvit",
-  "Silom",
-  "Thonglor",
-  "Burmese",
-  "Has Deals",
-] as const;
-
-export default function HomePage() {
-  const { loadRestaurants } = useRestaurantStore();
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [userLat, setUserLat] = useState<number | null>(null);
-  const [userLng, setUserLng] = useState<number | null>(null);
-  const [locationLoading, setLocationLoading] = useState(true);
-  const [radiusKm, setRadiusKm] = useState(10);
-  const [areaFilter, setAreaFilter] = useState("All");
-
-  const centerLat = userLat ?? BANGKOK.lat;
-  const centerLng = userLng ?? BANGKOK.lng;
-
-  useEffect(() => {
-    loadRestaurants().then(() => {
-      const { restaurants: r } = useRestaurantStore.getState();
-      setRestaurants(r);
+async function getLandingSeo(): Promise<SeoRow> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/seo?key=landing`, {
+      next: { revalidate: 60 },
     });
-  }, [loadRestaurants]);
+    const json = await res.json();
+    return (json.seo as SeoRow) ?? {};
+  } catch {
+    return {};
+  }
+}
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setLocationLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLat(pos.coords.latitude);
-        setUserLng(pos.coords.longitude);
-        setLocationLoading(false);
-      },
-      () => setLocationLoading(false),
-      { timeout: 5000, enableHighAccuracy: false },
-    );
-  }, []);
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getLandingSeo();
 
-  const filteredByArea =
-    areaFilter === "All"
-      ? restaurants
-      : restaurants.filter(
-          (r) =>
-            r.area.toLowerCase().includes(areaFilter.toLowerCase()) ||
-            r.cuisineTags.some((t) =>
-              t.toLowerCase().includes(areaFilter.toLowerCase()),
-            ),
-        );
+  const title = seo.title ?? "Mher Thar Ser — Find Myanmar Restaurants in Bangkok";
+  const description = seo.description ?? "Discover authentic Myanmar restaurants in Bangkok, Thailand. Menus, prices, promotions, and table booking in one place.";
 
-  const totalRestaurants = restaurants.length;
-  const totalReviews = restaurants.reduce(
-    (sum, r) => sum + (r.reviewCount ?? r.googleReviewCount ?? 0),
-    0,
-  );
-  const uniqueAreas = new Set(restaurants.map((r) => r.area)).size;
+  return {
+    title,
+    description,
+    keywords: seo.keywords ?? "myanmar restaurant, burmese food, bangkok, thailand",
+    openGraph: {
+      title: seo.og_title ?? title,
+      description: seo.og_description ?? description,
+      images: seo.og_image ? [{ url: seo.og_image }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.og_title ?? title,
+      description: seo.og_description ?? description,
+      images: seo.og_image ? [seo.og_image] : [],
+    },
+  };
+}
 
-  return (
-    <div className="min-h-screen overflow-x-hidden bg-bg">
-      {/* Hero - full width centered */}
-      <section className="hero">
-        <div className="hero-inner">
-          <div className="hero-badge">
-            <span className="badge-dot" />
-            Bangkok · Myanmar Restaurants
-          </div>
-
-          <h2 className="hero-h2">Find Myanmar Food</h2>
-          <h1 className="hero-h1">
-            <em>near you</em>
-          </h1>
-
-          <p className="hero-sub">
-            Discover authentic Myanmar restaurants in Thailand - Menus, Prices,
-            Promotions in one place.
-          </p>
-
-          {/* <div className="search-bar">
-            <MagnifyingGlass
-              className="search-icon shrink-0 w-5 h-5"
-              weight="bold"
-            />
-            <input
-              type="text"
-              placeholder="Restaurant, cuisine, or area..."
-              className="flex-1 min-w-0"
-            />
-            <div className="search-divider" />
-            <span className="search-loc flex items-center gap-1.5">
-              <MapPin className="w-4 h-4" weight="fill" />
-              Bangkok
-            </span>
-            <button type="button" className="search-btn">
-              Search
-            </button>
-          </div> */}
-
-          {/* <div className="filter-row">
-            {AREA_FILTERS.map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setAreaFilter(f)}
-                className={`fpill ${areaFilter === f ? "active" : ""}`}
-              >
-                {f}
-              </button>
-            ))}
-          </div> */}
-
-          {/* <div className="stats-row">
-            <div className="stat">
-              <div className="stat-n">{totalRestaurants}+</div>
-              <div className="stat-l">Restaurants</div>
-            </div>
-            <div className="stat">
-              <div className="stat-n">
-                {totalReviews >= 1000
-                  ? `${(totalReviews / 1000).toFixed(0)}k`
-                  : totalReviews}
-              </div>
-              <div className="stat-l">Reviews</div>
-            </div>
-            <div className="stat">
-              <div className="stat-n">{uniqueAreas}</div>
-              <div className="stat-l">Thai Cities</div>
-            </div>
-          </div> */}
-        </div>
-      </section>
-
-      {/* Discovery panel - map + list */}
-      <div id="discovery">
-        <DiscoveryPanel
-          userLat={userLat}
-          userLng={userLng}
-          loading={locationLoading}
-          restaurants={filteredByArea}
-          radiusKm={radiusKm}
-          onRadiusChange={setRadiusKm}
-        />
-      </div>
-
-      {/* Footer */}
-      <footer className="border-t border-border py-6 px-6 md:px-8 flex items-center justify-between bg-bg">
-        <div>
-          <span className="font-sans text-[15px] font-bold text-text-primary">
-            Mher Thar Ser
-          </span>
-          <span className="text-[12px] text-text-muted ml-2">
-            &copy; {new Date().getFullYear()}
-          </span>
-        </div>
-        <div className="text-[12px] text-text-muted">
-          Dark-first &middot; EN + MY
-        </div>
-      </footer>
-    </div>
-  );
+export default function Page() {
+  return <HomePageClient />;
 }

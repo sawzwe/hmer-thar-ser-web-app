@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   UsersThree,
   SignOut,
+  Globe,
 } from "@phosphor-icons/react";
 
 export type AdminShellUser = {
@@ -70,6 +71,13 @@ const NAV_SECTIONS: { title: string | null; items: NavItem[] }[] = [
         apiPath: "/api/admin/reviews",
         queryKey: ["admin-reviews"],
       },
+      {
+        href: "/admin/seo",
+        label: "SEO",
+        icon: Globe,
+        apiPath: "/api/admin/seo",
+        queryKey: ["admin-seo"],
+      },
     ],
   },
   {
@@ -105,6 +113,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/restaurants": "Restaurants",
   "/admin/bookings": "Bookings",
   "/admin/reviews": "Reviews",
+  "/admin/seo": "SEO",
 };
 
 function getPageTitle(path: string | null): string {
