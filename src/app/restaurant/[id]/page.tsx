@@ -87,7 +87,7 @@ export default function RestaurantDetailPage({
   if (!restaurant) {
     return (
       <div className="max-w-5xl mx-auto px-6 md:px-12 py-20 text-center">
-        <h2 className="font-serif text-2xl font-bold text-text-primary mb-4">
+        <h2 className="font-sans text-2xl font-bold text-text-primary mb-4">
           Restaurant not found
         </h2>
         <Link href="/">
@@ -138,7 +138,7 @@ export default function RestaurantDetailPage({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[rgba(10,10,8,0.85)] via-[rgba(10,10,8,0.3)] to-transparent" />
         <div className="absolute bottom-0 left-0 p-8 space-y-3">
-          <h1 className="font-serif text-3xl md:text-4xl font-bold text-text-primary drop-shadow-lg tracking-[-1px]">
+          <h1 className="font-sans text-3xl md:text-4xl font-bold text-text-primary drop-shadow-lg tracking-[-1px]">
             {r.name}
           </h1>
           <div className="flex flex-wrap items-center gap-3 text-[13px] text-[rgba(245,244,239,0.8)]">

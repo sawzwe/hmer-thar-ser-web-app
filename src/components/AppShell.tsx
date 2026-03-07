@@ -57,6 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isChat = pathname === "/chat";
   const isCms =
     pathname?.startsWith("/vendor") || pathname?.startsWith("/admin");
+  const isHome = pathname === "/";
 
   if (isCms) {
     return <>{children}</>;
@@ -69,34 +70,79 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         isChat && "h-screen overflow-hidden",
       )}
     >
-      <nav className="sticky top-0 z-[var(--z-nav)] flex items-center justify-between px-6 md:px-8 h-14 bg-[rgba(10,10,8,0.88)] backdrop-blur-[24px] border-b border-border shrink-0">
+      <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-[var(--z-nav)] flex items-center justify-between px-5 md:px-6 h-14 rounded-2xl bg-surface/95 backdrop-blur-xl backdrop-saturate-150 border border-brand/20 shadow-[var(--shadow-lg)] shrink-0">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-[var(--radius-md)] bg-brand flex items-center justify-center font-serif text-[13px] font-bold text-white">
+          <div
+            className="w-[30px] h-[30px] rounded-[7px] bg-brand flex items-center justify-center font-sans text-[13px] font-bold text-white"
+            style={isHome ? { width: 30, height: 30, borderRadius: 7 } : {}}
+          >
             H
           </div>
-          <span className="font-serif text-[16px] font-bold text-text-primary tracking-[-0.3px] whitespace-nowrap">
+          <span
+            className={cn(
+              "font-sans font-bold text-text-primary whitespace-nowrap",
+              isHome ? "text-[15px] tracking-[-0.3px]" : "text-[16px] tracking-[-0.3px]"
+            )}
+          >
             Mher Thar Ser
           </span>
         </Link>
 
         <div className="flex items-center gap-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "px-3 py-[5px] rounded-[var(--radius-full)] text-[13px] font-medium transition-all duration-[var(--dur-fast)]",
-                pathname === item.href
-                  ? "bg-brand-dim text-brand-light"
-                  : "text-text-muted hover:text-text-primary",
+          {isHome ? (
+            <>
+              {user && user.isAuthenticated() ? (
+                <Link
+                  href="/bookings"
+                  className="hidden md:flex px-4 py-2 rounded-[100px] border border-border-strong text-[13px] font-medium text-text-secondary hover:text-text-primary transition-all"
+                >
+                  Bookings
+                </Link>
+              ) : (
+                <button
+                  onClick={() => setAuthModal("sign-in")}
+                  className="hidden md:flex px-4 py-2 rounded-[100px] border border-border-strong text-[13px] font-medium text-text-muted hover:text-text-primary transition-all bg-transparent cursor-pointer"
+                >
+                  Sign in
+                </button>
               )}
-            >
-              {item.label}
-            </Link>
-          ))}
-          <div className="w-px h-4 bg-border-strong mx-2" />
+              {user?.isAuthenticated() ? (
+                <Link
+                  href="/bookings"
+                  className="flex items-center gap-1 px-4 py-2 rounded-[100px] bg-brand text-white text-[13px] font-semibold hover:bg-brand-hover transition-all"
+                >
+                  Get Started
+                  <span className="hidden sm:inline">→</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => setAuthModal("sign-up")}
+                  className="flex items-center gap-1 px-4 py-2 rounded-[100px] bg-brand text-white text-[13px] font-semibold hover:bg-brand-hover transition-all cursor-pointer border-none"
+                >
+                  Get Started
+                  <span className="hidden sm:inline">→</span>
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "px-3 py-[5px] rounded-[var(--radius-full)] text-[13px] font-medium transition-all duration-[var(--dur-fast)]",
+                    pathname === item.href
+                      ? "bg-brand-dim text-brand-light"
+                      : "text-text-muted hover:text-text-primary",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <div className="w-px h-4 bg-border-strong mx-2" />
 
-          {user && user.isAuthenticated() ? (
+              {user && user.isAuthenticated() ? (
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen((o) => !o)}
@@ -182,17 +228,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Sign in
             </button>
           )}
+            </>
+          )}
         </div>
       </nav>
 
-      <main className={cn("flex-1", isChat && "overflow-hidden")}>
+      <main className={cn("flex-1", !isChat && "pt-20", isChat && "overflow-hidden")}>
         {children}
       </main>
 
-      {!isChat && (
+      {!isChat && !isHome && (
         <footer className="border-t border-border py-6 px-6 md:px-8 flex items-center justify-between">
           <div>
-            <span className="font-serif text-[15px] font-bold text-text-primary">
+            <span className="font-sans text-[15px] font-bold text-text-primary">
               Mher Thar Ser
             </span>
             <span className="text-[12px] text-text-muted ml-2">

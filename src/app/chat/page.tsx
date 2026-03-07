@@ -404,7 +404,7 @@ function MessageRow({ msg }: { msg: ChatMessage }) {
           "w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-sm mt-0.5",
           isUser
             ? "bg-card-hover border border-border-strong text-base"
-            : "bg-brand font-serif font-bold text-white text-[12px]"
+            : "bg-brand font-sans font-bold text-white text-[12px]"
         )}
       >
         {isUser ? "🙂" : "H"}

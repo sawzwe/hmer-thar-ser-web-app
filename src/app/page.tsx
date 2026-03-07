@@ -1,96 +1,173 @@
 "use client";
 
+import { useEffect, useState, useCallback } from "react";
+import { MagnifyingGlass, MapPin } from "@phosphor-icons/react";
 import { useRestaurantStore } from "@/stores/restaurantStore";
-import { RestaurantCard } from "@/components/RestaurantCard";
-import { SearchAndFilters } from "@/components/SearchAndFilters";
-import { Button } from "@/components/ui/button";
+import { getDistanceKm } from "@/lib/map/distance";
+import { DiscoveryPanel } from "@/components/DiscoveryPanel";
+import type { Restaurant } from "@/types";
+
+const BANGKOK = { lat: 13.7563, lng: 100.5018 } as const;
+const AREA_FILTERS = [
+  "All",
+  "Sukhumvit",
+  "Silom",
+  "Thonglor",
+  "Burmese",
+  "Has Deals",
+] as const;
 
 export default function HomePage() {
-  const { loading, filteredRestaurants } = useRestaurantStore();
-  const restaurants = filteredRestaurants();
+  const { loadRestaurants } = useRestaurantStore();
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLng, setUserLng] = useState<number | null>(null);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [radiusKm, setRadiusKm] = useState(10);
+  const [areaFilter, setAreaFilter] = useState("All");
+
+  const centerLat = userLat ?? BANGKOK.lat;
+  const centerLng = userLng ?? BANGKOK.lng;
+
+  useEffect(() => {
+    loadRestaurants().then(() => {
+      const { restaurants: r } = useRestaurantStore.getState();
+      setRestaurants(r);
+    });
+  }, [loadRestaurants]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLat(pos.coords.latitude);
+        setUserLng(pos.coords.longitude);
+        setLocationLoading(false);
+      },
+      () => setLocationLoading(false),
+      { timeout: 5000, enableHighAccuracy: false },
+    );
+  }, []);
+
+  const filteredByArea =
+    areaFilter === "All"
+      ? restaurants
+      : restaurants.filter(
+          (r) =>
+            r.area.toLowerCase().includes(areaFilter.toLowerCase()) ||
+            r.cuisineTags.some((t) =>
+              t.toLowerCase().includes(areaFilter.toLowerCase()),
+            ),
+        );
+
+  const totalRestaurants = restaurants.length;
+  const totalReviews = restaurants.reduce(
+    (sum, r) => sum + (r.reviewCount ?? r.googleReviewCount ?? 0),
+    0,
+  );
+  const uniqueAreas = new Set(restaurants.map((r) => r.area)).size;
 
   return (
-    <>
-      {/* Hero */}
-      <section className="relative overflow-hidden px-6 md:px-8 pt-16 pb-14">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse 60% 80% at 100% 50%, rgba(232,66,26,0.12) 0%, transparent 60%), radial-gradient(ellipse 40% 60% at 0% 80%, rgba(212,168,83,0.06) 0%, transparent 50%)",
-          }}
-        />
-
-        <div className="relative max-w-7xl mx-auto">
-          {/* Label pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-[var(--radius-full)] border border-border-strong bg-[rgba(255,255,255,0.04)] text-[11px] font-bold text-text-secondary tracking-[0.08em] uppercase mb-7">
-            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-dot" />
-            Bangkok · 7 areas · {restaurants.length}+ restaurants
+    <div className="min-h-screen overflow-x-hidden bg-bg">
+      {/* Hero - full width centered */}
+      <section className="hero">
+        <div className="hero-inner">
+          <div className="hero-badge">
+            <span className="badge-dot" />
+            Bangkok · Myanmar Restaurants
           </div>
 
-          <h1 className="font-serif text-[clamp(48px,7vw,88px)] font-black leading-[1.0] tracking-[-2px] text-text-primary max-w-[680px] mb-5">
-            Find your next <em className="italic text-brand-light">great</em>{" "}
-            meal
+          <h2 className="hero-h2">Find Myanmar Food</h2>
+          <h1 className="hero-h1">
+            <em>near you</em>
           </h1>
-          <p className="text-[15px] text-text-secondary max-w-[460px] leading-[1.65] mb-10">
-            Exclusive deals, handpicked restaurants, and table bookings —
-            instantly confirmed.
+
+          <p className="hero-sub">
+            Discover authentic Myanmar restaurants in Thailand - Menus, Prices,
+            Promotions in one place.
           </p>
 
-          <SearchAndFilters />
+          {/* <div className="search-bar">
+            <MagnifyingGlass
+              className="search-icon shrink-0 w-5 h-5"
+              weight="bold"
+            />
+            <input
+              type="text"
+              placeholder="Restaurant, cuisine, or area..."
+              className="flex-1 min-w-0"
+            />
+            <div className="search-divider" />
+            <span className="search-loc flex items-center gap-1.5">
+              <MapPin className="w-4 h-4" weight="fill" />
+              Bangkok
+            </span>
+            <button type="button" className="search-btn">
+              Search
+            </button>
+          </div> */}
+
+          {/* <div className="filter-row">
+            {AREA_FILTERS.map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setAreaFilter(f)}
+                className={`fpill ${areaFilter === f ? "active" : ""}`}
+              >
+                {f}
+              </button>
+            ))}
+          </div> */}
+
+          {/* <div className="stats-row">
+            <div className="stat">
+              <div className="stat-n">{totalRestaurants}+</div>
+              <div className="stat-l">Restaurants</div>
+            </div>
+            <div className="stat">
+              <div className="stat-n">
+                {totalReviews >= 1000
+                  ? `${(totalReviews / 1000).toFixed(0)}k`
+                  : totalReviews}
+              </div>
+              <div className="stat-l">Reviews</div>
+            </div>
+            <div className="stat">
+              <div className="stat-n">{uniqueAreas}</div>
+              <div className="stat-l">Thai Cities</div>
+            </div>
+          </div> */}
         </div>
       </section>
 
-      {/* Results */}
-      <div className="px-6 md:px-8 max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-[13px] text-text-muted">
-            Showing{" "}
-            <strong className="text-text-secondary font-medium">
-              {restaurants.length} restaurants
-            </strong>{" "}
-            · Bangkok
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-card rounded-[var(--radius-lg)] border border-border overflow-hidden animate-pulse"
-              >
-                <div className="aspect-[16/9] bg-surface" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-surface rounded w-2/3" />
-                  <div className="h-3 bg-surface rounded w-1/2" />
-                  <div className="h-3 bg-surface rounded w-full" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : restaurants.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="text-lg text-text-secondary mb-4">
-              No restaurants found matching your criteria.
-            </p>
-            <Button
-              variant="ghost"
-              onClick={() => useRestaurantStore.getState().resetFilters()}
-            >
-              Clear all filters
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {restaurants.map((r, i) => (
-              <RestaurantCard key={r.id} restaurant={r} featured={i === 0} />
-            ))}
-          </div>
-        )}
+      {/* Discovery panel - map + list */}
+      <div id="discovery">
+        <DiscoveryPanel
+          userLat={userLat}
+          userLng={userLng}
+          loading={locationLoading}
+          restaurants={filteredByArea}
+          radiusKm={radiusKm}
+          onRadiusChange={setRadiusKm}
+        />
       </div>
 
-      <div className="h-16" />
-    </>
+      {/* Footer */}
+      <footer className="border-t border-border py-6 px-6 md:px-8 flex items-center justify-between bg-bg">
+        <div>
+          <span className="font-sans text-[15px] font-bold text-text-primary">
+            Mher Thar Ser
+          </span>
+          <span className="text-[12px] text-text-muted ml-2">
+            &copy; {new Date().getFullYear()}
+          </span>
+        </div>
+        <div className="text-[12px] text-text-muted">
+          Dark-first &middot; EN + MY
+        </div>
+      </footer>
+    </div>
   );
 }
