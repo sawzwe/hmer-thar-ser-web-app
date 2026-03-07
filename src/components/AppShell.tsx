@@ -14,6 +14,7 @@ import { initializeSlotsIfNeeded } from "@/lib/slots";
 import { runMigrations } from "@/lib/storage";
 import { t } from "@/lib/i18n/translations";
 import { Logo } from "@/components/Logo";
+import { MobileTopBar } from "@/components/mobile/MobileTopBar";
 import { Toast } from "./Toast";
 import { AuthModal } from "./AuthModal";
 import { cn } from "@/lib/utils";
@@ -84,6 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/", label: t(lang, "discover") },
+    { href: "/restaurants", label: t(lang, "seeAllRestaurants") },
     { href: "/chat", label: t(lang, "whatToEat") },
     { href: "/bookings", label: t(lang, "bookings") },
   ];
@@ -104,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         isChat && "h-screen overflow-hidden",
       )}
     >
-      <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-[var(--z-nav)] flex items-center justify-between px-5 md:px-6 h-14 rounded-2xl bg-surface/95 backdrop-blur-xl backdrop-saturate-150 border border-brand/20 shadow-[var(--shadow-lg)] shrink-0">
+        <nav className="desktop-nav fixed top-4 left-4 right-4 md:left-8 md:right-8 z-[var(--z-nav)] flex items-center justify-between px-5 md:px-6 h-14 rounded-2xl bg-surface/95 backdrop-blur-xl backdrop-saturate-150 border border-brand/20 shadow-[var(--shadow-lg)] shrink-0">
         <Link href="/" className="flex items-center gap-2.5">
           <div
             className={cn(
@@ -205,20 +207,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               )}
               {user?.isAuthenticated() ? (
                 <Link
-                  href="/bookings"
+                  href="/restaurants"
                   className="flex items-center gap-1 px-4 py-2 rounded-[100px] bg-brand text-white text-[13px] font-semibold hover:bg-brand-hover transition-all"
                 >
-                  {t(lang, "getStarted")}
+                  {t(lang, "seeAllRestaurants")}
                   <span className="hidden sm:inline">→</span>
                 </Link>
               ) : (
-                <button
-                  onClick={() => setAuthModal("sign-up")}
-                  className="flex items-center gap-1 px-4 py-2 rounded-[100px] bg-brand text-white text-[13px] font-semibold hover:bg-brand-hover transition-all cursor-pointer border-none"
+                <Link
+                  href="/restaurants"
+                  className="flex items-center gap-1 px-4 py-2 rounded-[100px] bg-brand text-white text-[13px] font-semibold hover:bg-brand-hover transition-all"
                 >
-                  {t(lang, "getStarted")}
+                  {t(lang, "seeAllRestaurants")}
                   <span className="hidden sm:inline">→</span>
-                </button>
+                </Link>
               )}
             </>
           ) : (
@@ -328,9 +330,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </>
           )}
         </div>
-      </nav>
+        </nav>
 
-      <main className={cn("flex-1", !isChat && "pt-20", isChat && "overflow-hidden")}>
+      <div className="mobile-topbar-wrapper">
+        <MobileTopBar />
+      </div>
+
+      <main className={cn("flex-1", !isChat && "pt-20 main-with-nav", isChat && "overflow-hidden")}>
         {children}
       </main>
 

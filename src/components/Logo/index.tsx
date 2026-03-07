@@ -7,9 +7,11 @@ export interface LogoProps {
   size?: number;
   /** Optional className for the wrapper. */
   className?: string;
+  /** Use "cover" to fill container and crop padding; "contain" preserves aspect. */
+  objectFit?: "contain" | "cover";
 }
 
-export function Logo({ size = 30, className }: LogoProps) {
+export function Logo({ size = 30, className, objectFit = "contain" }: LogoProps) {
   return (
     <img
       src={LOGO_SRC}
@@ -17,7 +19,7 @@ export function Logo({ size = 30, className }: LogoProps) {
       width={size}
       height={size}
       className={className}
-      style={{ objectFit: "contain", display: "block" }}
+      style={{ objectFit, display: "block" }}
     />
   );
 }

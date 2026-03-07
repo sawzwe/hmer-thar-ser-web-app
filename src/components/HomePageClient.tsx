@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRestaurantStore } from "@/stores/restaurantStore";
 import { useLanguageStore } from "@/stores/languageStore";
+import { useMobileHomeViewStore } from "@/stores/mobileHomeViewStore";
 import { t } from "@/lib/i18n/translations";
 import { Logo } from "@/components/Logo";
-import { getDistanceKm } from "@/lib/map/distance";
 import { DiscoveryPanel } from "@/components/DiscoveryPanel";
+import { MobileLandingView } from "@/components/mobile/MobileLandingView";
+import { RestaurantCard } from "@/components/RestaurantCard";
 import type { Restaurant } from "@/types";
 
 const BANGKOK = { lat: 13.7563, lng: 100.5018 } as const;
@@ -71,10 +74,34 @@ export function HomePageClient() {
   );
   const uniqueAreas = new Set(restaurants.map((r) => r.area)).size;
 
+  const mobileHomeView = useMobileHomeViewStore((s) => s.view);
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-bg">
-      {/* Hero - full width centered */}
-      <section className="hero">
+      {/* Mobile: map or list (interchangeable) */}
+      <div className="mobile-landing-wrapper">
+        {mobileHomeView === "map" ? (
+          <MobileLandingView
+            userLat={userLat}
+            userLng={userLng}
+            loading={locationLoading}
+            restaurants={filteredByArea}
+            radiusKm={radiusKm}
+            onRadiusChange={setRadiusKm}
+          />
+        ) : (
+          <div className="mobile-restaurants-list">
+            <div className="mobile-restaurants-list-inner">
+              {filteredByArea.map((r) => (
+                <RestaurantCard key={r.id} restaurant={r} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: hero + discovery + footer */}
+      <section className="hero desktop-only">
         <div className="hero-inner">
           <div className="hero-badge">
             <span className="badge-dot" />
@@ -87,6 +114,14 @@ export function HomePageClient() {
           </h1>
 
           <p className="hero-sub">{t(lang, "heroSub")}</p>
+
+          <Link
+            href="/restaurants"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-[100px] bg-brand text-white text-[15px] font-semibold hover:bg-brand-hover transition-all"
+          >
+            {t(lang, "seeAllRestaurants")}
+            <span>→</span>
+          </Link>
 
           {/* <div className="search-bar">
             <MagnifyingGlass
@@ -143,7 +178,7 @@ export function HomePageClient() {
       </section>
 
       {/* Discovery panel - map + list */}
-      <div id="discovery">
+      <div id="discovery" className="desktop-only">
         <DiscoveryPanel
           userLat={userLat}
           userLng={userLng}
@@ -155,7 +190,7 @@ export function HomePageClient() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-border py-6 px-6 md:px-8 flex items-center justify-between bg-bg">
+      <footer className="desktop-only border-t border-border py-6 px-6 md:px-8 flex items-center justify-between bg-bg">
         <div className="flex items-center gap-2">
           <Logo size={24} />
           <span className="font-sans text-[15px] font-bold text-text-primary">

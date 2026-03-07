@@ -36,6 +36,14 @@ interface DiscoveryPanelProps {
   restaurants: Restaurant[];
   radiusKm: number;
   onRadiusChange: (km: number) => void;
+  /** Mobile map-first layout */
+  mobile?: boolean;
+  /** Called when a map pin is clicked (mobile) */
+  onMarkerClick?: (id: string) => void;
+  /** Externally selected restaurant (e.g. from bottom sheet card) */
+  selectedId?: string | null;
+  /** Called when a list/sheet card is clicked (mobile) */
+  onCardSelect?: (r: Restaurant) => void;
 }
 
 export function DiscoveryPanel({
@@ -45,6 +53,10 @@ export function DiscoveryPanel({
   restaurants,
   radiusKm,
   onRadiusChange,
+  mobile = false,
+  onMarkerClick,
+  selectedId: externalSelectedId,
+  onCardSelect,
 }: DiscoveryPanelProps) {
   const lang = useLanguageStore((s) => s.lang);
   const theme = useThemeStore((s) => s.theme);
@@ -56,7 +68,8 @@ export function DiscoveryPanel({
   const markersRef = useRef<Record<string, Marker>>({});
   const listRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
+  const selectedId = externalSelectedId ?? internalSelectedId;
 
   const centerLat = userLat ?? BANGKOK.lat;
   const centerLng = userLng ?? BANGKOK.lng;
@@ -79,6 +92,7 @@ export function DiscoveryPanel({
 
     const map = L.map(containerRef.current, {
       zoomControl: false,
+      attributionControl: false,
       minZoom: 11,
       maxZoom: 18,
     }).setView([BANGKOK.lat, BANGKOK.lng], 12);
@@ -90,9 +104,7 @@ export function DiscoveryPanel({
     map.setMaxBounds(bounds);
     map.options.maxBoundsViscosity = 1.0;
 
-    const tileLayer = L.tileLayer(tileUrl, {
-      attribution: "© OpenStreetMap contributors © CARTO",
-    }).addTo(map);
+    const tileLayer = L.tileLayer(tileUrl, { attribution: "" }).addTo(map);
     tileLayerRef.current = tileLayer;
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
@@ -121,9 +133,8 @@ export function DiscoveryPanel({
       map.removeLayer(tileLayerRef.current);
       tileLayerRef.current = null;
     }
-    const tileLayer = L.tileLayer(getTileUrl(theme), {
-      attribution: "© OpenStreetMap contributors © CARTO",
-    }).addTo(map);
+    const tileUrl = getTileUrl(theme);
+    const tileLayer = L.tileLayer(tileUrl, { attribution: "" }).addTo(map);
     tileLayerRef.current = tileLayer;
   }, [theme, mapReady]);
 
@@ -218,7 +229,8 @@ export function DiscoveryPanel({
         .addTo(map)
         .bindPopup(popupContent)
         .on("click", () => {
-          setSelectedId(r.id);
+          setInternalSelectedId(r.id);
+          onMarkerClick?.(r.id);
           const card = listRef.current?.querySelector(`[data-restaurant-id="${r.id}"]`);
           card?.scrollIntoView({ behavior: "smooth", block: "nearest" });
         });
@@ -227,15 +239,33 @@ export function DiscoveryPanel({
     });
   }, [filteredRestaurants, centerLat, centerLng, mapReady, lang]);
 
-  const handleCardClick = useCallback((r: Restaurant) => {
-    setSelectedId(r.id);
+  // When external selectedId changes (e.g. from bottom sheet card), pan and open popup
+  useEffect(() => {
     const map = mapRef.current;
-    const marker = markersRef.current[r.id];
-    if (map && marker) {
-      map.panTo([r.geo.lat, r.geo.lng], { animate: true });
-      marker.openPopup();
+    if (!map || !mapReady || !externalSelectedId) return;
+    const marker = markersRef.current[externalSelectedId];
+    if (marker) {
+      const r = filteredRestaurants.find((x) => x.id === externalSelectedId);
+      if (r) {
+        map.panTo([r.geo.lat, r.geo.lng], { animate: true });
+        marker.openPopup();
+      }
     }
-  }, []);
+  }, [externalSelectedId, mapReady, filteredRestaurants]);
+
+  const handleCardClick = useCallback(
+    (r: Restaurant) => {
+      setInternalSelectedId(r.id);
+      onCardSelect?.(r);
+      const map = mapRef.current;
+      const marker = markersRef.current[r.id];
+      if (map && marker) {
+        map.panTo([r.geo.lat, r.geo.lng], { animate: true });
+        marker.openPopup();
+      }
+    },
+    [onCardSelect]
+  );
 
   return (
     <section className="discovery-panel">

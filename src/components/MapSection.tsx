@@ -32,6 +32,7 @@ export function MapSection({ geo, address, name, lang }: MapSectionProps) {
 
     const map = L.map(containerRef.current, {
       zoomControl: true,
+      attributionControl: false,
       dragging: false,
       scrollWheelZoom: false,
       doubleClickZoom: false,
@@ -39,9 +40,7 @@ export function MapSection({ geo, address, name, lang }: MapSectionProps) {
       keyboard: false,
     }).setView([geo.lat, geo.lng], 16);
 
-    const tileLayer = L.tileLayer(tileUrl, {
-      attribution: "© OpenStreetMap contributors © CARTO",
-    }).addTo(map);
+    const tileLayer = L.tileLayer(tileUrl, { attribution: "" }).addTo(map);
     tileLayerRef.current = tileLayer;
 
     const icon = L.divIcon({
@@ -73,9 +72,7 @@ export function MapSection({ geo, address, name, lang }: MapSectionProps) {
       map.removeLayer(tileLayerRef.current);
       tileLayerRef.current = null;
     }
-    const tileLayer = L.tileLayer(getTileUrl(theme), {
-      attribution: "© OpenStreetMap contributors © CARTO",
-    }).addTo(map);
+    const tileLayer = L.tileLayer(getTileUrl(theme), { attribution: "" }).addTo(map);
     tileLayerRef.current = tileLayer;
   }, [theme]);
 

@@ -77,6 +77,7 @@ export function LandingMap({
 
     const map = L.map(containerRef.current, {
       zoomControl: false,
+      attributionControl: false,
       minZoom: 11,
       maxZoom: 18,
     }).setView([BANGKOK.lat, BANGKOK.lng], 13);
@@ -121,9 +122,7 @@ export function LandingMap({
       map.removeLayer(tileLayerRef.current);
       tileLayerRef.current = null;
     }
-    const tileLayer = L.tileLayer(getTileUrl(theme), {
-      attribution: "© OpenStreetMap contributors © CARTO",
-    }).addTo(map);
+    const tileLayer = L.tileLayer(getTileUrl(theme), { attribution: "" }).addTo(map);
     tileLayerRef.current = tileLayer;
   }, [theme, mapReady]);
 
