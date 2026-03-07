@@ -73,5 +73,25 @@
   "copied": "Copied!",
   "bookingConfirmed": "Booking Confirmed!",
   "reference": "Reference:",
-  "viewBookings": "View Bookings"
+  "viewBookings": "View Bookings",
+
+  "onboardWelcome": "Welcome to Mher Thar Ser",
+  "onboardChooseLang": "Choose your language",
+  "onboardContinue": "Continue",
+  "onboardEmailTitle": "Get booking confirmations",
+  "onboardEmailSub": "Optional. We'll use this for booking confirmations and reminders.",
+  "onboardEmailPlaceholder": "your@email.com",
+  "onboardSkip": "Skip",
+  "onboardSave": "Save & Continue",
+  "onboardEmailInvalid": "Please enter a valid email address",
+
+  "onboardLocationTitle": "Turn on location for the best experience",
+  "onboardLocationSub": "We'll show you nearby Myanmar restaurants and distances from you.",
+  "onboardEnableLocation": "Enable Location",
+  "onboardLocationSkip": "Skip for now",
+  "onboardLocationDenied": "Location permission denied",
+  "onboardLocationError": "Could not get location",
+  "onboardLocationUnsupported": "Location is not supported",
+  "onboardLocationSecureRequired": "Location requires HTTPS or localhost",
+  "back": "Back"
 }

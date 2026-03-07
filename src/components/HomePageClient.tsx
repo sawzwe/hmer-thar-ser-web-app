@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRestaurantStore } from "@/stores/restaurantStore";
 import { useLanguageStore } from "@/stores/languageStore";
 import { useMobileHomeViewStore } from "@/stores/mobileHomeViewStore";
+import { useLocationStore } from "@/stores/locationStore";
 import { t } from "@/lib/i18n/translations";
 import { Logo } from "@/components/Logo";
 import { DiscoveryPanel } from "@/components/DiscoveryPanel";
@@ -25,10 +26,13 @@ const AREA_FILTERS = [
 export function HomePageClient() {
   const { loadRestaurants } = useRestaurantStore();
   const lang = useLanguageStore((s) => s.lang);
+  const storedLat = useLocationStore((s) => s.lat);
+  const storedLng = useLocationStore((s) => s.lng);
+  const setLocation = useLocationStore((s) => s.setLocation);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [userLat, setUserLat] = useState<number | null>(null);
-  const [userLng, setUserLng] = useState<number | null>(null);
-  const [locationLoading, setLocationLoading] = useState(true);
+  const [userLat, setUserLat] = useState<number | null>(storedLat);
+  const [userLng, setUserLng] = useState<number | null>(storedLng);
+  const [locationLoading, setLocationLoading] = useState(!storedLat && !storedLng);
   const [radiusKm, setRadiusKm] = useState(10);
   const [areaFilter, setAreaFilter] = useState("All");
 
@@ -44,17 +48,24 @@ export function HomePageClient() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (storedLat != null && storedLng != null) {
+      setUserLat(storedLat);
+      setUserLng(storedLng);
+      setLocationLoading(false);
+      return;
+    }
     setLocationLoading(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLat(pos.coords.latitude);
         setUserLng(pos.coords.longitude);
+        setLocation(pos.coords.latitude, pos.coords.longitude);
         setLocationLoading(false);
       },
       () => setLocationLoading(false),
       { timeout: 5000, enableHighAccuracy: false },
     );
-  }, []);
+  }, [storedLat, storedLng, setLocation]);
 
   const filteredByArea =
     areaFilter === "All"

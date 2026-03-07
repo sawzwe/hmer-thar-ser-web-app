@@ -73,5 +73,25 @@
   "copied": "ကူးယူပြီး!",
   "bookingConfirmed": "ကြိုတင်စာရင်းသွင်းမှု အတည်ပြုပြီး!",
   "reference": "ကိုးကားနံပါတ်:",
-  "viewBookings": "ကြိုတင်စာရင်းများ ကြည့်ပါ"
+  "viewBookings": "ကြိုတင်စာရင်းများ ကြည့်ပါ",
+
+  "onboardWelcome": "Mher Thar Ser မှ ကြိုဆိုပါသည်",
+  "onboardChooseLang": "သင့်ဘာသာစကားရွေးပါ",
+  "onboardContinue": "ဆက်လက်ပါ",
+  "onboardEmailTitle": "ကြိုတင်စာရင်းသွင်းမှု အတည်ပြုချက်များ ရယူပါ",
+  "onboardEmailSub": "ရွေးချယ်နိုင်သည်။ ကြိုတင်စာရင်းသွင်းမှု အတည်ပြုချက်များနှင့် သတိပေးချက်များအတွက် သုံးပါမည်။",
+  "onboardEmailPlaceholder": "your@email.com",
+  "onboardSkip": "ကျော်ပါ",
+  "onboardSave": "သိမ်းပြီး ဆက်လက်ပါ",
+  "onboardEmailInvalid": "ကျေးဇူးပြု၍ မှန်ကန်သော အီးမေးလ်လိပ်စာ ထည့်ပါ",
+
+  "onboardLocationTitle": "အကောင်းဆုံး အတွေ့အကြုံအတွက် တည်နေရာ ဖွင့်ပါ",
+  "onboardLocationSub": "သင့်အနီးရှိ မြန်မာစားသောက်ဆိုင်များနှင့် အကွာအဝေးကို ပြသပါမည်။",
+  "onboardEnableLocation": "တည်နေရာ ဖွင့်ပါ",
+  "onboardLocationSkip": "ယခု ကျော်ပါ",
+  "onboardLocationDenied": "တည်နေရာ ခွင့်ပြုချက် ငြင်းဆိုပါသည်",
+  "onboardLocationError": "တည်နေရာ မရနိုင်ပါ",
+  "onboardLocationUnsupported": "တည်နေရာ မပံ့ပိုးပါ",
+  "onboardLocationSecureRequired": "တည်နေရာသည် HTTPS သို့မဟုတ် localhost လိုအပ်ပါသည်",
+  "back": "ပြန်သွားပါ"
 }

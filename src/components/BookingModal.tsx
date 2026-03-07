@@ -5,6 +5,7 @@ import { Restaurant, Deal } from "@/types";
 import { getSlotsForDate } from "@/lib/slots";
 import { useBookingStore } from "@/stores/bookingStore";
 import { useWaitlistStore } from "@/stores/waitlistStore";
+import { useOnboardingStore } from "@/stores/onboardingStore";
 import { format, addDays } from "date-fns";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ type Step = "datetime" | "details" | "confirm";
 export function BookingModal({ restaurant, preselectedDeal, onClose, onSuccess }: BookingModalProps) {
   const book = useBookingStore((s) => s.book);
   const joinWaitlist = useWaitlistStore((s) => s.join);
+  const guestEmail = useOnboardingStore((s) => s.guestEmail);
 
   const [step, setStep] = useState<Step>("datetime");
   const [selectedDeal, setSelectedDeal] = useState<Deal | undefined>(preselectedDeal);
@@ -30,7 +32,7 @@ export function BookingModal({ restaurant, preselectedDeal, onClose, onSuccess }
   const [time, setTime] = useState("");
   const [partySize, setPartySize] = useState(2);
   const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
+  const [contact, setContact] = useState(guestEmail ?? "");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
